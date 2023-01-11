@@ -12,15 +12,13 @@ const port = process.env.PORT || 3005;
 
 const lc = new LeetCode();
 
-const getSubmittedToday = async (
+const getRecentAcceptedSubmission = async (
   username: string
 ): Promise<RecentSubmission | undefined> => {
-  const submissions = await lc.recent_submissions(username);
+  const submissions: RecentSubmission[] = await lc.recent_submissions(username);
   return submissions.find(
     (submission: RecentSubmission) =>
-      submission.statusDisplay === 'Accepted' &&
-      new Date(submission.timestamp).setHours(0, 0, 0, 0) ===
-        new Date().setHours(0, 0, 0, 0)
+      submission.statusDisplay === 'Accepted'
   );
 };
 
@@ -31,17 +29,45 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
-  const { userData } = req.body;
+  const { userData }: { userData: User[] } = req.body;
 
   const updatedUserData = await Promise.all(
     userData.map(async (user: User): Promise<User> => {
-      if (await getSubmittedToday(user.username)) {
-        user.submittedToday = true;
-        user.streak++;
-      } else {
-        user.submittedToday = false;
-        user.streak = 0;
+      const dayInMilliseconds = 24*60*60*1000;
+
+      const recentSubmission = await getRecentAcceptedSubmission(user.username);
+      let lastSubmittedFixed = new Date(user.lastSubmitted).setHours(0, 0, 0, 0);
+      console.log(`Last submitted date: ${new Date(user.lastSubmitted).setHours(0, 0, 0, 0)}`);
+      
+
+      const today = new Date().setHours(0, 0, 0, 0);
+      const cleanTimestamp = Number(recentSubmission?.timestamp) * 1000;
+      const submissionTimestampFixed = new Date(cleanTimestamp).setHours(0, 0, 0, 0);
+
+      // More recent submission than last submission, update last submission timestamp
+      if (submissionTimestampFixed > lastSubmittedFixed) {
+        lastSubmittedFixed = submissionTimestampFixed;
+        user.lastSubmitted = new Date(submissionTimestampFixed);
       }
+
+      console.log(`${user.username}. Recent Submission: ${JSON.stringify(recentSubmission)}`);
+
+      // Submitted > 1 day ago -> Reset streak
+      if (lastSubmittedFixed < today - dayInMilliseconds) {
+        user.streak = 0;
+        user.submittedToday = false;
+      } 
+      // Submitted 1 day ago -> Increase streak
+      else if (lastSubmittedFixed < today) {
+        user.streak++;
+        user.submittedToday = false;
+      }
+      // Submitted today -> Keep streak (can't increase multiple times in same day)
+      else if (lastSubmittedFixed === today) {
+        user.submittedToday = true;
+      }
+
+      user.lastUpdated = new Date(today);
       console.log(user);
 
       return user;
