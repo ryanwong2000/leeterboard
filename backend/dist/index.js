@@ -34,10 +34,10 @@ app.get('/getUpdatedUsers', (req, res) => __awaiter(void 0, void 0, void 0, func
         const cleanTimestamp = Number(recentSubmission === null || recentSubmission === void 0 ? void 0 : recentSubmission.timestamp) * 1000;
         const submissionTimestampFixed = new Date(cleanTimestamp).setHours(0, 0, 0, 0);
         // More recent submission than last submission, update last submission timestamp
-        if (submissionTimestampFixed > lastSubmittedFixed) {
-            lastSubmittedFixed = submissionTimestampFixed;
-            user.lastSubmitted = new Date(submissionTimestampFixed);
-        }
+        // if (submissionTimestampFixed > lastSubmittedFixed) {
+        //   lastSubmittedFixed = submissionTimestampFixed;
+        //   user.lastSubmitted = new Date(submissionTimestampFixed);
+        // }
         console.log(`${user.username}. Recent Submission: ${JSON.stringify(recentSubmission)}`);
         // Submitted > 1 day ago -> Reset streak
         if (lastSubmittedFixed < today - dayInMilliseconds) {
@@ -52,6 +52,10 @@ app.get('/getUpdatedUsers', (req, res) => __awaiter(void 0, void 0, void 0, func
         // Submitted today -> Keep streak (can't increase multiple times in same day)
         else if (lastSubmittedFixed === today) {
             user.submittedToday = true;
+        }
+        if (submissionTimestampFixed > lastSubmittedFixed) {
+            lastSubmittedFixed = submissionTimestampFixed;
+            user.lastSubmitted = new Date(submissionTimestampFixed);
         }
         user.lastUpdated = new Date(today);
         console.log(user);

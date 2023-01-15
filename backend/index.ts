@@ -17,8 +17,7 @@ const getRecentAcceptedSubmission = async (
 ): Promise<RecentSubmission | undefined> => {
   const submissions: RecentSubmission[] = await lc.recent_submissions(username);
   return submissions.find(
-    (submission: RecentSubmission) =>
-      submission.statusDisplay === 'Accepted'
+    (submission: RecentSubmission) => submission.statusDisplay === 'Accepted'
   );
 };
 
@@ -33,30 +32,50 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
 
   const updatedUserData = await Promise.all(
     userData.map(async (user: User): Promise<User> => {
-      const dayInMilliseconds = 24*60*60*1000;
+      const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
       const recentSubmission = await getRecentAcceptedSubmission(user.username);
-      let lastSubmittedFixed = new Date(user.lastSubmitted).setHours(0, 0, 0, 0);
-      console.log(`Last submitted date: ${new Date(user.lastSubmitted).setHours(0, 0, 0, 0)}`);
-      
+      let lastSubmittedFixed = new Date(user.lastSubmitted).setHours(
+        0,
+        0,
+        0,
+        0
+      );
+      console.log(
+        `Last submitted date: ${new Date(user.lastSubmitted).setHours(
+          0,
+          0,
+          0,
+          0
+        )}`
+      );
 
       const today = new Date().setHours(0, 0, 0, 0);
       const cleanTimestamp = Number(recentSubmission?.timestamp) * 1000;
-      const submissionTimestampFixed = new Date(cleanTimestamp).setHours(0, 0, 0, 0);
+      const submissionTimestampFixed = new Date(cleanTimestamp).setHours(
+        0,
+        0,
+        0,
+        0
+      );
 
       // More recent submission than last submission, update last submission timestamp
-      if (submissionTimestampFixed > lastSubmittedFixed) {
-        lastSubmittedFixed = submissionTimestampFixed;
-        user.lastSubmitted = new Date(submissionTimestampFixed);
-      }
+      // if (submissionTimestampFixed > lastSubmittedFixed) {
+      //   lastSubmittedFixed = submissionTimestampFixed;
+      //   user.lastSubmitted = new Date(submissionTimestampFixed);
+      // }
 
-      console.log(`${user.username}. Recent Submission: ${JSON.stringify(recentSubmission)}`);
+      console.log(
+        `${user.username}. Recent Submission: ${JSON.stringify(
+          recentSubmission
+        )}`
+      );
 
       // Submitted > 1 day ago -> Reset streak
       if (lastSubmittedFixed < today - dayInMilliseconds) {
         user.streak = 0;
         user.submittedToday = false;
-      } 
+      }
       // Submitted 1 day ago -> Increase streak
       else if (lastSubmittedFixed < today) {
         user.streak++;
@@ -65,6 +84,11 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
       // Submitted today -> Keep streak (can't increase multiple times in same day)
       else if (lastSubmittedFixed === today) {
         user.submittedToday = true;
+      }
+
+      if (submissionTimestampFixed > lastSubmittedFixed) {
+        lastSubmittedFixed = submissionTimestampFixed;
+        user.lastSubmitted = new Date(submissionTimestampFixed);
       }
 
       user.lastUpdated = new Date(today);
