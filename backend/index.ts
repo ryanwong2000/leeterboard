@@ -4,7 +4,8 @@ import type { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { LeetCode } from 'leetcode-query';
 import bodyParser from 'body-parser';
-import type { RecentSubmission, User } from './types/types';
+import type { LCSubmission, RecentSubmission, User } from './types/types';
+import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
 
@@ -13,29 +14,34 @@ const port = process.env.PORT || 5000;
 
 const lc = new LeetCode();
 
+const supabaseUrl: string = process.env.SUPABASE_URL || '';
+const supabaseKey: string = process.env.SUPABASE_KEY || '';
+const supabaseSecret: string = process.env.SUPABASE_SECRET || '';
+
+const supabase = createClient(supabaseUrl, supabaseSecret);
+
 const getRecentAcceptedSubmission = async (
   username: string
-): Promise<RecentSubmission | undefined> => {
-  const submissions: RecentSubmission[] = await lc.recent_submissions(username);
+): Promise<LCSubmission | undefined> => {
+  const submissions: LCSubmission[] = await lc.recent_submissions(username);
   return submissions.find(
-    (submission: RecentSubmission) => submission.statusDisplay === 'Accepted'
+    (submission: LCSubmission) => submission.statusDisplay === 'Accepted'
   );
 };
 
 app.use(cors());
 app.use(express.json());
 
-const jsonParser = bodyParser.json();
-
 app.get('/', (req: Request, res: Response) => {
   res.send('Express + TypeScript Server');
 });
 
-app.post('/getUpdatedUsers', async (req: Request, res: Response) => {
-  const { userData }: { userData: User[] } = req.body;
+app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
+  const { data, error }: { data: User[] | null; error: any } = await supabase
+    .from('UserData')
+    .select();
 
-  console.log(`user data is: ${userData}`);
-  console.log(`req.body is: ${JSON.stringify(req.body)}`);
+  const userData = data ?? [];
 
   const updatedUserData = await Promise.all(
     userData.map(async (user: User): Promise<User> => {
@@ -50,12 +56,21 @@ app.post('/getUpdatedUsers', async (req: Request, res: Response) => {
       );
       let lastUpdatedFixed = new Date(user.lastUpdated).setHours(0, 0, 0, 0);
 
-      const recentSubmission = await getRecentAcceptedSubmission(user.username);
+      const lcSubmission = await getRecentAcceptedSubmission(user.username);
+
+      if (typeof lcSubmission === 'undefined') {
+        return user;
+      }
 
       // Convert recent submission timestamp to date
       const newSubmissionDate = new Date(
-        Number(recentSubmission?.timestamp) * 1000
+        Number(lcSubmission?.timestamp) * 1000
       ).setHours(0, 0, 0, 0);
+
+      const recentSubmission: RecentSubmission = {
+        ...lcSubmission,
+        timestamp: new Date(newSubmissionDate)
+      };
 
       const today = new Date().setHours(0, 0, 0, 0);
 
@@ -66,9 +81,7 @@ app.post('/getUpdatedUsers', async (req: Request, res: Response) => {
       }
 
       console.log(
-        `${user.username}. Recent Submission: ${JSON.stringify(
-          recentSubmission
-        )}`
+        `${user.username}. Recent Submission: ${JSON.stringify(lcSubmission)}`
       );
 
       // Submitted > 1 day ago -> Reset streak
@@ -87,11 +100,24 @@ app.post('/getUpdatedUsers', async (req: Request, res: Response) => {
       user.lastUpdated = new Date(today);
       console.log(user);
 
+      const { error }: { error: any } = await supabase
+        .from('UserData')
+        .update({
+          ...user,
+          ...recentSubmission
+        })
+        .eq('id', user.id);
+
+      console.log(error);
+
       return user;
     })
   );
+
   res.status(200).json(updatedUserData);
 });
+
+app.post('createNewUser', async (req: Request, res: Response) => {});
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
