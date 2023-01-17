@@ -1,12 +1,21 @@
-interface RecentSubmission {
+interface Submission {
   lang: string;
   statusDisplay: string;
-  timestamp: string;
+  timestamp: string | Date;
   title: string;
   titleSlug: string;
 }
 
+interface LCSubmission extends Submission {
+  timestamp: string;
+}
+
+interface RecentSubmission extends Submission {
+  timestamp: Date;
+}
+
 interface User {
+  id: number;
   username: string;
   submittedToday: boolean;
   streak: number;
@@ -14,4 +23,4 @@ interface User {
   lastSubmitted: Date;
 }
 
-export type { RecentSubmission, User };
+export type { LCSubmission, RecentSubmission, User };

@@ -9,20 +9,20 @@ function App() {
   useEffect(() => {
     console.log('useEffect');
     setUserData([
-      {
-        username: 'ryanwong2000',
-        streak: 4,
-        submittedToday: false,
-        lastUpdated: new Date('2023-01-15'),
-        lastSubmitted: new Date('2023-01-16')
-      },
-      {
-        username: 'Adamo-O',
-        streak: 7,
-        submittedToday: false,
-        lastUpdated: new Date('2023-01-15'),
-        lastSubmitted: new Date('2023-01-15')
-      }
+      // {
+      //   username: 'ryanwong2000',
+      //   streak: 4,
+      //   submittedToday: false,
+      //   lastUpdated: new Date('2023-01-15'),
+      //   lastSubmitted: new Date('2023-01-16')
+      // },
+      // {
+      //   username: 'Adamo-O',
+      //   streak: 7,
+      //   submittedToday: false,
+      //   lastUpdated: new Date('2023-01-15'),
+      //   lastSubmitted: new Date('2023-01-15')
+      // }
     ]);
   }, []);
 
@@ -30,16 +30,7 @@ function App() {
     console.log('called update all users');
 
     const url = 'http://localhost:5000/getUpdatedUsers';
-    const res = await fetch(url, {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        userData
-      })
-    });
+    const res = await fetch(url);
 
     const updatedUserData = (await res.json()) as User[];
     console.log(updatedUserData);
