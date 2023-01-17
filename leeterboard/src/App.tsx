@@ -13,8 +13,15 @@ function App() {
         username: 'ryanwong2000',
         streak: 4,
         submittedToday: false,
-        lastUpdated: new Date('2023-01-13'),
-        lastSubmitted: new Date('2023-01-14')
+        lastUpdated: new Date('2023-01-15'),
+        lastSubmitted: new Date('2023-01-16')
+      },
+      {
+        username: 'Adamo-O',
+        streak: 7,
+        submittedToday: false,
+        lastUpdated: new Date('2023-01-15'),
+        lastSubmitted: new Date('2023-01-15')
       }
     ]);
   }, []);
@@ -22,15 +29,26 @@ function App() {
   const updateAllUsers = async () => {
     console.log('called update all users');
 
-    const url = 'http://localhost:3005/getupdatedusers';
-    const res = await fetch(url);
-    const updatedUserData = await res.json();
+    const url = 'http://localhost:5000/getUpdatedUsers';
+    const res = await fetch(url, {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userData
+      })
+    });
+
+    const updatedUserData = (await res.json()) as User[];
+    console.log(updatedUserData);
     setUserData(updatedUserData);
   };
 
   return (
     <div className="App">
-      <button onClick={() => updateAllUsers}>lole</button>
+      <button onClick={() => updateAllUsers()}>lole</button>
       {userData && userData.map((user, i) => <UserCard key={i} user={user} />)}
     </div>
   );
