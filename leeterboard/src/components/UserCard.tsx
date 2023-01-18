@@ -1,8 +1,8 @@
 import React from 'react';
 // import { Card, CardContent } from '@mui/material';
-import type { User, RecentSubmission } from '../../types/types';
+import type { LCUser, RecentSubmission } from '../../types/types';
 
-export default function UserCard(props: { user: User }) {
+export default function UserCard(props: { user: LCUser }) {
   return (
     <>
       <div>

@@ -4,7 +4,7 @@ import type { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { LeetCode } from 'leetcode-query';
 import bodyParser from 'body-parser';
-import type { LCSubmission, RecentSubmission, User } from './types/types';
+import type { LCSubmission, RecentSubmission, LCUser } from './types/types';
 import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
@@ -37,14 +37,14 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
-  const { data, error }: { data: User[] | null; error: any } = await supabase
+  const { data, error }: { data: LCUser[] | null; error: any } = await supabase
     .from('UserData')
     .select();
 
   const userData = data ?? [];
 
   const updatedUserData = await Promise.all(
-    userData.map(async (user: User): Promise<User> => {
+    userData.map(async (user: LCUser): Promise<LCUser> => {
       const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
       // Clean user dates (submitted and updated times)
