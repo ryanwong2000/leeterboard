@@ -14,7 +14,7 @@ interface RecentSubmission extends Submission {
   timestamp: Date;
 }
 
-interface User {
+interface LCUser {
   id: number;
   username: string;
   submittedToday: boolean;
@@ -23,4 +23,13 @@ interface User {
   lastSubmitted: Date;
 }
 
-export type { LCSubmission, RecentSubmission, User };
+interface SBUser {
+  id: string;
+  aud: string;
+  role: string;
+  email: string;
+  email_confirmed_at: Date;
+  provider: string;
+}
+
+export type { LCSubmission, RecentSubmission, LCUser };
