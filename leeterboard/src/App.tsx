@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient';
 import type { RecentSubmission, LCUser } from '../types/types';
 import UserCard from './components/UserCard';
 import { OAuthResponse, UserResponse } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
 
 function App() {
   const [userData, setUserData] = useState<LCUser[]>([]);
@@ -24,10 +25,6 @@ function App() {
     const userRes: UserResponse = await supabase.auth.getUser();
     console.log(userRes.data.user);
     setUser(userRes.data.user);
-    // const tempUser = userRes.data.user as SupabaseUser | null;
-    // if (tempUser) {
-    //   setUser(tempUser);
-    // }
   };
 
   const signInWithGitHub = async () => {
@@ -54,7 +51,7 @@ function App() {
 
   return (
     <div className="App">
-      <p>{user?.data.user?.email || ''}</p>
+      <p>{user?.email || ''}</p>
       <button onClick={() => updateAllUsers()}>lole</button>
       {user ? (
         <button onClick={() => signOut()}>Sign Out</button>

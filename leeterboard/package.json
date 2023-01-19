@@ -47,5 +47,8 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://leetcode.com/"
+  "proxy": "http://leetcode.com/",
+  "devDependencies": {
+    "supabase": "^1.33.1"
+  }
 }
