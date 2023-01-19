@@ -34,25 +34,26 @@ app.get('/getUpdatedUsers', (req, res) => __awaiter(void 0, void 0, void 0, func
         .from('UserData')
         .select();
     const userData = data !== null && data !== void 0 ? data : [];
+    console.log('userData', userData);
     const updatedUserData = yield Promise.all(userData.map((user) => __awaiter(void 0, void 0, void 0, function* () {
         const dayInMilliseconds = 24 * 60 * 60 * 1000;
         // Clean user dates (submitted and updated times)
         let lastSubmittedFixed = new Date(user.lastSubmitted).setHours(0, 0, 0, 0);
         let lastUpdatedFixed = new Date(user.lastUpdated).setHours(0, 0, 0, 0);
-        const lcSubmission = yield getRecentAcceptedSubmission(user.username);
-        if (typeof lcSubmission === 'undefined') {
+        const LeetCodeQuerySubmission = yield getRecentAcceptedSubmission(user.username);
+        if (typeof LeetCodeQuerySubmission === 'undefined') {
             return user;
         }
         // Convert recent submission timestamp to date
-        const newSubmissionDate = new Date(Number(lcSubmission === null || lcSubmission === void 0 ? void 0 : lcSubmission.timestamp) * 1000).setHours(0, 0, 0, 0);
-        const recentSubmission = Object.assign(Object.assign({}, lcSubmission), { timestamp: new Date(newSubmissionDate) });
+        const newSubmissionDate = new Date(Number(LeetCodeQuerySubmission === null || LeetCodeQuerySubmission === void 0 ? void 0 : LeetCodeQuerySubmission.timestamp) * 1000).setHours(0, 0, 0, 0);
+        const recentSubmission = Object.assign(Object.assign({}, LeetCodeQuerySubmission), { timestamp: new Date(newSubmissionDate) });
         const today = new Date().setHours(0, 0, 0, 0);
         // More recent submission than last submission, update last submission timestamp
         if (newSubmissionDate > lastSubmittedFixed) {
             lastSubmittedFixed = newSubmissionDate;
             user.lastSubmitted = new Date(newSubmissionDate);
         }
-        console.log(`${user.username}. Recent Submission: ${JSON.stringify(lcSubmission)}`);
+        console.log(`${user.username}. Recent Submission: ${JSON.stringify(LeetCodeQuerySubmission)}`);
         // Submitted > 1 day ago -> Reset streak
         if (lastSubmittedFixed < today - dayInMilliseconds) {
             user.streak = 0;
@@ -64,12 +65,11 @@ app.get('/getUpdatedUsers', (req, res) => __awaiter(void 0, void 0, void 0, func
         // Set submitted today if submitted today
         user.submittedToday = lastSubmittedFixed === today;
         user.lastUpdated = new Date(today);
-        console.log(user);
+        // console.log(user);
         const { error } = yield supabase
             .from('UserData')
             .update(Object.assign(Object.assign({}, user), recentSubmission))
             .eq('id', user.id);
-        console.log(error);
         return user;
     })));
     res.status(200).json(updatedUserData);
