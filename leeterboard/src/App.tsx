@@ -1,30 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import './App.css';
-import type { RecentSubmission, User } from '../types/types';
+import { supabase } from './supabaseClient';
+import type { RecentSubmission, LCUser } from '../types/types';
 import UserCard from './components/UserCard';
+import { User, OAuthResponse, UserResponse } from '@supabase/supabase-js';
 
 function App() {
-  const [userData, setUserData] = useState<User[]>([]);
+  const [userData, setUserData] = useState<LCUser[]>([]);
+  const [user, setUser] = useState<User | null>();
 
   useEffect(() => {
     console.log('useEffect');
-    setUserData([
-      // {
-      //   username: 'ryanwong2000',
-      //   streak: 4,
-      //   submittedToday: false,
-      //   lastUpdated: new Date('2023-01-15'),
-      //   lastSubmitted: new Date('2023-01-16')
-      // },
-      // {
-      //   username: 'Adamo-O',
-      //   streak: 7,
-      //   submittedToday: false,
-      //   lastUpdated: new Date('2023-01-15'),
-      //   lastSubmitted: new Date('2023-01-15')
-      // }
-    ]);
+    setUserData([]);
+    checkUser().then(() => {
+      window.addEventListener('hashchange', () => {
+        checkUser().then(() => {
+          console.log('hash change');
+        });
+      });
+    });
   }, []);
+
+  const checkUser = async () => {
+    const userRes: UserResponse = await supabase.auth.getUser();
+    console.log(userRes.data.user);
+    setUser(userRes.data.user);
+  };
+
+  const signInWithGitHub = async () => {
+    const { data, error }: OAuthResponse = await supabase.auth.signInWithOAuth({
+      provider: 'github'
+    });
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    setUser(null);
+    console.log('Signed out');
+  };
 
   const updateAllUsers = async () => {
     console.log('called update all users');
@@ -32,14 +44,20 @@ function App() {
     const url = 'http://localhost:5000/getUpdatedUsers';
     const res = await fetch(url);
 
-    const updatedUserData = (await res.json()) as User[];
+    const updatedUserData = (await res.json()) as LCUser[];
     console.log(updatedUserData);
     setUserData(updatedUserData);
   };
 
   return (
     <div className="App">
+      <p>{user?.email || ''}</p>
       <button onClick={() => updateAllUsers()}>lole</button>
+      {user ? (
+        <button onClick={() => signOut()}>Sign Out</button>
+      ) : (
+        <button onClick={() => signInWithGitHub()}>Sign In with GitHub</button>
+      )}
       {userData && userData.map((user, i) => <UserCard key={i} user={user} />)}
     </div>
   );

@@ -7,6 +7,7 @@
     "@emotion/styled": "^11.10.5",
     "@mui/material": "^5.11.4",
     "@mui/types": "^7.2.3",
+    "@supabase/supabase-js": "^2.4.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -46,5 +47,8 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://leetcode.com/"
+  "proxy": "http://leetcode.com/",
+  "devDependencies": {
+    "supabase": "^1.33.1"
+  }
 }
