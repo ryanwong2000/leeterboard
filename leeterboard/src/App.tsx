@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import type { RecentSubmission, LCUser } from '../types/types';
 import UserCard from './components/UserCard';
-import { OAuthResponse, UserResponse } from '@supabase/supabase-js';
-import type { User } from '@supabase/supabase-js';
+import { User, OAuthResponse, UserResponse } from '@supabase/supabase-js';
 
 function App() {
   const [userData, setUserData] = useState<LCUser[]>([]);
@@ -36,6 +35,7 @@ function App() {
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     setUser(null);
+    console.log('Signed out');
   };
 
   const updateAllUsers = async () => {
