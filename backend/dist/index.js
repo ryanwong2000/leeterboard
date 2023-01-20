@@ -32,23 +32,26 @@ app.get('/', (req, res) => {
 app.get('/getUpdatedUsers', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { data, error } = yield supabase.from('UserData').select();
     const userData = data !== null && data !== void 0 ? data : [];
-    // console.log('userData', userData);
+    console.log('userData', userData);
     const updatedUserData = yield Promise.all(userData.map((user) => __awaiter(void 0, void 0, void 0, function* () {
         const dayInMilliseconds = 24 * 60 * 60 * 1000;
+        // Convert the string to use commas instead of dashes
         const lastSubmittedString = user.lastSubmitted.replace('-', ',');
         const lastUpdatedString = user.lastUpdated.replace('-', ',');
         // Clean user dates (submitted and updated times)
         let lastSubmittedFixed = new Date(lastSubmittedString);
         let lastUpdatedFixed = new Date(lastUpdatedString);
-        console.log('lastUpdatedString', lastUpdatedString, 'lastSubmittedString', lastSubmittedString, 'lastSubmittedFixed', lastSubmittedFixed, 'lastUpdatedFixed', lastUpdatedFixed);
         const LeetCodeQuerySubmission = yield getRecentAcceptedSubmission(user.username);
         if (typeof LeetCodeQuerySubmission === 'undefined') {
             return user;
         }
         // Convert recent submission timestamp to date
         const newSubmissionDate = new Date(Number(LeetCodeQuerySubmission === null || LeetCodeQuerySubmission === void 0 ? void 0 : LeetCodeQuerySubmission.timestamp) * 1000);
-        newSubmissionDate.setHours(0, 0, 0, 0);
+        const timestamp = new Date(newSubmissionDate);
+        console.log(timestamp);
+        console.log(timestamp.toISOString());
         const recentSubmission = Object.assign(Object.assign({}, LeetCodeQuerySubmission), { timestamp: new Date(newSubmissionDate) });
+        newSubmissionDate.setHours(0, 0, 0, 0);
         const today = new Date().setHours(0, 0, 0, 0);
         // More recent submission than last submission, update last submission timestamp
         if (newSubmissionDate > lastSubmittedFixed) {
@@ -66,14 +69,19 @@ app.get('/getUpdatedUsers', (req, res) => __awaiter(void 0, void 0, void 0, func
         else if (lastUpdatedFixed.valueOf() < today &&
             lastSubmittedFixed.valueOf() === today) {
             user.streak++;
+            user.timestamp = timestamp.toISOString();
         }
         // Set submitted today if submitted today
         user.submittedToday = lastSubmittedFixed.valueOf() === today;
         user.lastUpdated = new Date(today).toISOString().split('T')[0];
+        user = Object.assign(Object.assign(Object.assign({}, user), recentSubmission), { timestamp: timestamp.toISOString() });
+        console.log(user);
+        // Update the database entity
         const { error } = yield supabase
             .from('UserData')
-            .update(Object.assign(Object.assign({}, user), recentSubmission))
+            .update(Object.assign({}, user))
             .eq('id', user.id);
+        // console.log(user);
         return user;
     })));
     res.status(200).json(updatedUserData);

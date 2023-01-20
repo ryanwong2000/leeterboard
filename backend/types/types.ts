@@ -23,7 +23,7 @@ interface UserSchema {
   lastSubmitted: string;
   lang: string;
   statusDisplay: string;
-  timestamp: Date;
+  timestamp: string;
   title: string;
   titleSlug: string;
 }
@@ -35,11 +35,7 @@ interface LCUser {
   streak: number;
   lastUpdated: Date;
   lastSubmitted: Date;
-  lang: string;
-  statusDisplay: string;
-  timestamp: Date;
-  title: string;
-  titleSlug: string;
+  recentSubmission: RecentSubmission;
 }
 
 interface SBUser {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import type { LCUser } from '../types/types';
-import UserCard from './components/UserCard';
 import { User, OAuthResponse, UserResponse } from '@supabase/supabase-js';
 import { Board } from './components/Board';
 

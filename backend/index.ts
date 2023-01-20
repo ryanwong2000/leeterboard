@@ -48,30 +48,20 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
   const { data, error }: { data: UserSchema[] | null; error: any } =
     await supabase.from('UserData').select();
 
-  const userData = data ?? [];
-  // console.log('userData', userData);
+  const userData: UserSchema[] = data ?? [];
+
   const updatedUserData = await Promise.all(
     userData.map(async (user: UserSchema): Promise<UserSchema> => {
       const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
+      // Convert the string to use commas instead of dashes
       const lastSubmittedString = user.lastSubmitted.replace('-', ',');
       const lastUpdatedString = user.lastUpdated.replace('-', ',');
 
       // Clean user dates (submitted and updated times)
-      let lastSubmittedFixed = new Date(lastSubmittedString);
+      let lastSubmittedFixed: Date = new Date(lastSubmittedString);
 
-      let lastUpdatedFixed = new Date(lastUpdatedString);
-
-      console.log(
-        'lastUpdatedString',
-        lastUpdatedString,
-        'lastSubmittedString',
-        lastSubmittedString,
-        'lastSubmittedFixed',
-        lastSubmittedFixed,
-        'lastUpdatedFixed',
-        lastUpdatedFixed
-      );
+      let lastUpdatedFixed: Date = new Date(lastUpdatedString);
 
       const LeetCodeQuerySubmission: LeetCodeQuerySubmission | undefined =
         await getRecentAcceptedSubmission(user.username);
@@ -84,14 +74,17 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
       const newSubmissionDate = new Date(
         Number(LeetCodeQuerySubmission?.timestamp) * 1000
       );
-      newSubmissionDate.setHours(0, 0, 0, 0);
+
+      const timestamp = new Date(newSubmissionDate);
 
       const recentSubmission: RecentSubmission = {
         ...LeetCodeQuerySubmission,
         timestamp: new Date(newSubmissionDate)
       };
 
-      const today = new Date().setHours(0, 0, 0, 0);
+      newSubmissionDate.setHours(0, 0, 0, 0);
+
+      const today: number = new Date().setHours(0, 0, 0, 0);
 
       // More recent submission than last submission, update last submission timestamp
       if (newSubmissionDate > lastSubmittedFixed) {
@@ -122,6 +115,7 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
         lastSubmittedFixed.valueOf() === today
       ) {
         user.streak++;
+        user.timestamp = timestamp.toISOString();
       }
 
       // Set submitted today if submitted today
@@ -129,12 +123,16 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
 
       user.lastUpdated = new Date(today).toISOString().split('T')[0];
 
+      user = {
+        ...user,
+        ...recentSubmission,
+        timestamp: timestamp.toISOString()
+      };
+
+      // Update the database entity
       const { error }: { error: any } = await supabase
         .from('UserData')
-        .update({
-          ...user,
-          ...recentSubmission
-        })
+        .update({ ...user })
         .eq('id', user.id);
 
       return user;
