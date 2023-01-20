@@ -14,6 +14,20 @@ interface RecentSubmission extends Submission {
   timestamp: Date;
 }
 
+interface UserSchema {
+  id: number;
+  username: string;
+  submittedToday: boolean;
+  streak: number;
+  lastUpdated: string;
+  lastSubmitted: string;
+  lang: string;
+  statusDisplay: string;
+  timestamp: Date;
+  title: string;
+  titleSlug: string;
+}
+
 interface LCUser {
   id: number;
   username: string;
@@ -37,4 +51,4 @@ interface SBUser {
   provider: string;
 }
 
-export type { LeetCodeQuerySubmission, RecentSubmission, LCUser };
+export type { LeetCodeQuerySubmission, RecentSubmission, LCUser, UserSchema };

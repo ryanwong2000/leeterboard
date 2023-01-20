@@ -59,7 +59,6 @@ function App() {
       ) : (
         <button onClick={() => signInWithGitHub()}>Sign In with GitHub</button>
       )}
-      {/* {userData && userData.map((user, i) => <UserCard key={i} user={user} />)} */}
       <Board userData={userData} />
     </div>
   );
