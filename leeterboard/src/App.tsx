@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import type { LCUser } from '../types/types';
 import { User, OAuthResponse, UserResponse } from '@supabase/supabase-js';
-import { Board } from './components/Board';
+import { Board } from './components/Board/Board';
 
 function App() {
   const [userData, setUserData] = useState<LCUser[]>([]);
