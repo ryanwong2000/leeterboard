@@ -10,14 +10,14 @@ function App() {
 
   useEffect(() => {
     console.log('useEffect');
-    setUserData([]);
-    checkUser().then(() => {
-      window.addEventListener('hashchange', () => {
-        checkUser().then(() => {
-          console.log('hash change');
-        });
-      });
-    });
+    updateAllUsers();
+    // checkUser().then(() => {
+    //   window.addEventListener('hashchange', () => {
+    //     checkUser().then(() => {
+    //       console.log('hash change');
+    //     });
+    //   });
+    // });
   }, []);
 
   const checkUser = async () => {
