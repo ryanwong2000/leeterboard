@@ -21,7 +21,10 @@ export const Board = ({ userData }: BoardProps) => {
             <th className="language">Language</th>
           </tr>
         </thead>
-        <tbody>{userData && userData.map((user, i) => <UserCard key={i} user={user} />)}</tbody>
+        <tbody>
+          {userData &&
+            userData.map((user, i) => <UserCard key={i} user={user} />)}
+        </tbody>
       </table>
     </div>
   );

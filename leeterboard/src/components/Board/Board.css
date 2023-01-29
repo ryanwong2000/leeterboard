@@ -10,11 +10,13 @@ table {
   margin: auto;
   justify-content: center;
   width: 100%;
+  border-collapse: collapse;
 }
 
 tr.row {
-  text-align: left;
+  padding: 15px;
   border-top: 1px solid gray;
+  text-align: left;
 }
 
 td {
