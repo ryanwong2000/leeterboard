@@ -10,14 +10,16 @@ interface BoardProps {
 export const Board = ({ userData }: BoardProps) => {
   return (
     <table className="container">
-      <tr>
-        <th>User</th>
-        <th>streak</th>
-        <th>Today</th>
-        <th>Last Problem Accepted</th>
-        <th>Language</th>
-      </tr>
-      {userData && userData.map((user, i) => <UserCard key={i} user={user} />)}
+      <thead>
+        <tr className="row">
+          <th>User</th>
+          <th>streak</th>
+          <th>Today</th>
+          <th>Last Problem Accepted</th>
+          <th>Language</th>
+        </tr>
+      </thead>
+      <tbody>{userData && userData.map((user, i) => <UserCard key={i} user={user} />)}</tbody>
     </table>
   );
 };
