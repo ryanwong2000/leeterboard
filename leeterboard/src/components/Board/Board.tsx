@@ -15,7 +15,7 @@ export const Board = ({ userData }: BoardProps) => {
         <table>
           <thead>
             <tr className="row header">
-              <th className="name">User</th>
+              <th className="user">User</th>
               <th className="submittedToday">Today</th>
               <th className="streak">Streak</th>
               <th className="lastAccepted">Last Problem</th>
