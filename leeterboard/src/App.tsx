@@ -45,7 +45,10 @@ function App() {
     const res = await fetch(url);
 
     const updatedUserData = (await res.json()) as LCUser[];
-    updatedUserData.sort((a, b) => b.streak - a.streak);
+    updatedUserData.sort((a, b) => {
+      if (a.streak !== b.streak) return b.streak - a.streak;
+      return a.lastSubmitted > b.lastSubmitted ? -1 : 1;
+    });
     console.log('updatedUserData: ', updatedUserData);
     setUserData(updatedUserData);
   };
