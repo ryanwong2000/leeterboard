@@ -1,26 +1,35 @@
+.container {
+  margin: auto;
+  max-width: 50em;
+}
+
 .board {
   border-color: black;
-  margin: auto;
-  max-width: 70em;
+  padding: 5px;
+  border: 1px solid;
+  border-radius: 10px;
+  /* margin: auto; */
+  justify-content: center;
+  width: 100%;
 }
 
 table {
-  padding: 5px;
-  border: 1px solid;
-  margin: auto;
-  justify-content: center;
   width: 100%;
   border-collapse: collapse;
 }
 
 tr.row {
-  padding: 15px;
-  border-top: 1px solid gray;
+  /* border-bottom: 1px solid gray; */
   text-align: left;
+}
+
+th {
+  padding: 0.5em;
 }
 
 td {
   margin: auto;
+  padding: 1em;
 }
 
 .streak {
