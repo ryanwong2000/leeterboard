@@ -49,6 +49,6 @@
   },
   "proxy": "http://leetcode.com/",
   "devDependencies": {
-    "supabase": "^1.33.1"
+    "supabase": "^1.34.2"
   }
 }

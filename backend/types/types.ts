@@ -6,12 +6,26 @@ interface Submission {
   titleSlug: string;
 }
 
-interface LCSubmission extends Submission {
+interface LeetCodeQuerySubmission extends Submission {
   timestamp: string;
 }
 
 interface RecentSubmission extends Submission {
   timestamp: Date;
+}
+
+interface UserSchema {
+  id: number;
+  username: string;
+  submittedToday: boolean;
+  streak: number;
+  lastUpdated: string;
+  lastSubmitted: string;
+  lang: string;
+  statusDisplay: string;
+  timestamp: string;
+  title: string;
+  titleSlug: string;
 }
 
 interface LCUser {
@@ -21,6 +35,7 @@ interface LCUser {
   streak: number;
   lastUpdated: Date;
   lastSubmitted: Date;
+  recentSubmission: RecentSubmission;
 }
 
 interface SBUser {
@@ -32,4 +47,4 @@ interface SBUser {
   provider: string;
 }
 
-export type { LCSubmission, RecentSubmission, LCUser };
+export type { LeetCodeQuerySubmission, RecentSubmission, LCUser, UserSchema };

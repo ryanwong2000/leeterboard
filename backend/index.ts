@@ -4,7 +4,12 @@ import type { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { LeetCode } from 'leetcode-query';
 import bodyParser from 'body-parser';
-import type { LCSubmission, RecentSubmission, LCUser } from './types/types';
+import type {
+  LeetCodeQuerySubmission,
+  RecentSubmission,
+  LCUser,
+  UserSchema
+} from './types/types';
 import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
@@ -22,10 +27,13 @@ const supabase = createClient(supabaseUrl, supabaseSecret);
 
 const getRecentAcceptedSubmission = async (
   username: string
-): Promise<LCSubmission | undefined> => {
-  const submissions: LCSubmission[] = await lc.recent_submissions(username);
+): Promise<LeetCodeQuerySubmission | undefined> => {
+  const submissions: LeetCodeQuerySubmission[] = await lc.recent_submissions(
+    username
+  );
   return submissions.find(
-    (submission: LCSubmission) => submission.statusDisplay === 'Accepted'
+    (submission: LeetCodeQuerySubmission) =>
+      submission.statusDisplay === 'Accepted'
   );
 };
 
@@ -37,78 +45,95 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
-  const { data, error }: { data: LCUser[] | null; error: any } = await supabase
-    .from('UserData')
-    .select();
+  const { data, error }: { data: UserSchema[] | null; error: any } =
+    await supabase.from('UserData').select();
 
-  const userData = data ?? [];
+  const userData: UserSchema[] = data ?? [];
 
   const updatedUserData = await Promise.all(
-    userData.map(async (user: LCUser): Promise<LCUser> => {
+    userData.map(async (user: UserSchema): Promise<UserSchema> => {
       const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
+      // Convert the string to use commas instead of dashes
+      const lastSubmittedString = user.lastSubmitted.replace('-', ',');
+      const lastUpdatedString = user.lastUpdated.replace('-', ',');
+
       // Clean user dates (submitted and updated times)
-      let lastSubmittedFixed = new Date(user.lastSubmitted).setHours(
-        0,
-        0,
-        0,
-        0
-      );
-      let lastUpdatedFixed = new Date(user.lastUpdated).setHours(0, 0, 0, 0);
+      let lastSubmittedFixed: Date = new Date(lastSubmittedString);
 
-      const lcSubmission = await getRecentAcceptedSubmission(user.username);
+      let lastUpdatedFixed: Date = new Date(lastUpdatedString);
 
-      if (typeof lcSubmission === 'undefined') {
+      const LeetCodeQuerySubmission: LeetCodeQuerySubmission | undefined =
+        await getRecentAcceptedSubmission(user.username);
+
+      if (typeof LeetCodeQuerySubmission === 'undefined') {
         return user;
       }
 
       // Convert recent submission timestamp to date
       const newSubmissionDate = new Date(
-        Number(lcSubmission?.timestamp) * 1000
-      ).setHours(0, 0, 0, 0);
+        Number(LeetCodeQuerySubmission?.timestamp) * 1000
+      );
+
+      const timestamp = new Date(newSubmissionDate);
 
       const recentSubmission: RecentSubmission = {
-        ...lcSubmission,
+        ...LeetCodeQuerySubmission,
         timestamp: new Date(newSubmissionDate)
       };
 
-      const today = new Date().setHours(0, 0, 0, 0);
+      newSubmissionDate.setHours(0, 0, 0, 0);
+
+      const today: number = new Date().setHours(0, 0, 0, 0);
 
       // More recent submission than last submission, update last submission timestamp
       if (newSubmissionDate > lastSubmittedFixed) {
         lastSubmittedFixed = newSubmissionDate;
-        user.lastSubmitted = new Date(newSubmissionDate);
+        user.lastSubmitted = new Date(
+          newSubmissionDate.getFullYear(),
+          newSubmissionDate.getMonth(),
+          newSubmissionDate.getDate()
+        )
+          .toISOString()
+          .split('T')[0];
       }
 
       console.log(
-        `${user.username}. Recent Submission: ${JSON.stringify(lcSubmission)}`
+        `${user.username}. Recent Submission: ${JSON.stringify(
+          LeetCodeQuerySubmission
+        )}`
       );
 
       // Submitted > 1 day ago -> Reset streak
-      if (lastSubmittedFixed < today - dayInMilliseconds) {
+      if (lastSubmittedFixed.valueOf() < today - dayInMilliseconds) {
         user.streak = 0;
       }
 
       // Didn't update yet today and submitted today -> Increment streak
-      else if (lastUpdatedFixed < today && lastSubmittedFixed === today) {
+      else if (
+        lastUpdatedFixed.valueOf() < today &&
+        lastSubmittedFixed.valueOf() === today
+      ) {
         user.streak++;
+        user.timestamp = timestamp.toISOString();
       }
 
       // Set submitted today if submitted today
-      user.submittedToday = lastSubmittedFixed === today;
+      user.submittedToday = lastSubmittedFixed.valueOf() === today;
 
-      user.lastUpdated = new Date(today);
-      console.log(user);
+      user.lastUpdated = new Date(today).toISOString().split('T')[0];
 
+      user = {
+        ...user,
+        ...recentSubmission,
+        timestamp: timestamp.toISOString()
+      };
+
+      // Update the database entity
       const { error }: { error: any } = await supabase
         .from('UserData')
-        .update({
-          ...user,
-          ...recentSubmission
-        })
+        .update({ ...user })
         .eq('id', user.id);
-
-      console.log(error);
 
       return user;
     })

@@ -1,0 +1,63 @@
+:root {
+  --avatardiameter: 2.5em;
+  --avatargap: 1em;
+}
+
+.avatar {
+  height: var(--avatardiameter);
+  width: var(--avatardiameter);
+  border-radius: 30%;
+}
+
+th.user {
+  /* position: relative;
+  left: calc(var(--avatardiameter) + var(--avatargap)); */
+}
+
+.avatarname {
+  display: flex;
+  align-items: center;
+  gap: var(--avatargap);
+}
+
+.container {
+  margin: auto;
+  max-width: 50em;
+}
+
+.board {
+  border-color: black;
+  padding: 5px;
+  border: 1px solid;
+  border-radius: 10px;
+  /* margin: auto; */
+  justify-content: center;
+  width: 100%;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+tr > * {
+  /* border-bottom: 1px solid gray; */
+  text-align: left;
+  padding: 0.8em;
+}
+
+th {
+}
+
+td {
+  margin: auto;
+}
+
+.streak {
+  max-width: max-content;
+  text-align: center;
+}
+
+.submittedToday {
+  text-align: center;
+}
