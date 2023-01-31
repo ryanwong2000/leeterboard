@@ -15,7 +15,7 @@ import { createClient } from '@supabase/supabase-js';
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5454;
 app.use(cors());
 app.use(express.json());
 
@@ -55,10 +55,6 @@ const getUpdatedUserData = async (user: UserSchema) => {
   try {
     const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
-    // Clean user dates (submitted and updated times)
-    let lastSubmittedFixed = stringToDate(user.lastSubmitted);
-    let lastUpdatedFixed = stringToDate(user.lastUpdated);
-
     const lcqRecentSubmission = await getRecentAcceptedSubmission(
       user.username
     );
@@ -84,18 +80,22 @@ const getUpdatedUserData = async (user: UserSchema) => {
       timestamp: timestamp
     };
 
-    const newSubmissionDate = new Date(timestamp);
+    const newSubmissionFixed = new Date(timestamp);
 
-    newSubmissionDate.setHours(0, 0, 0, 0);
+    newSubmissionFixed.setHours(0, 0, 0, 0);
+
+    // Clean user dates (submitted and updated times)
+    let lastSubmittedFixed = stringToDate(user.lastSubmitted);
+    const lastUpdatedFixed = stringToDate(user.lastUpdated);
 
     // More recent submission than last submission, update last submission timestamp
-    if (newSubmissionDate > lastSubmittedFixed) {
-      lastSubmittedFixed = newSubmissionDate;
+    if (newSubmissionFixed > lastSubmittedFixed) {
+      lastSubmittedFixed = newSubmissionFixed;
       user.lastSubmitted = dateToString(
         new Date(
-          newSubmissionDate.getFullYear(),
-          newSubmissionDate.getMonth(),
-          newSubmissionDate.getDate()
+          newSubmissionFixed.getFullYear(),
+          newSubmissionFixed.getMonth(),
+          newSubmissionFixed.getDate()
         )
       );
     }
