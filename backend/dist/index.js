@@ -49,18 +49,18 @@ const getUpdatedUserData = (user) => __awaiter(void 0, void 0, void 0, function*
         if (typeof lcqRecentSubmission === 'undefined') {
             return user;
         }
+        console.log(`${user.username}. Recent Submission: ${JSON.stringify(lcqRecentSubmission)}`);
         // Convert recent submission timestamp to date
         const newSubmissionDate = new Date(Number(lcqRecentSubmission === null || lcqRecentSubmission === void 0 ? void 0 : lcqRecentSubmission.timestamp) * 1000);
         const timestamp = new Date(newSubmissionDate);
         const recentSubmission = Object.assign(Object.assign({}, lcqRecentSubmission), { timestamp: timestamp });
         newSubmissionDate.setHours(0, 0, 0, 0);
-        const today = new Date().setHours(0, 0, 0, 0);
         // More recent submission than last submission, update last submission timestamp
         if (newSubmissionDate > lastSubmittedFixed) {
             lastSubmittedFixed = newSubmissionDate;
             user.lastSubmitted = dateToString(new Date(newSubmissionDate.getFullYear(), newSubmissionDate.getMonth(), newSubmissionDate.getDate()));
         }
-        console.log(`${user.username}. Recent Submission: ${JSON.stringify(lcqRecentSubmission)}`);
+        const today = new Date().setHours(0, 0, 0, 0);
         // Submitted > 1 day ago -> Reset streak
         if (lastSubmittedFixed.valueOf() < today - dayInMilliseconds) {
             user.streak = 0;
@@ -71,10 +71,7 @@ const getUpdatedUserData = (user) => __awaiter(void 0, void 0, void 0, function*
             user.streak++;
             user.timestamp = timestamp.toISOString();
         }
-        // Set submitted today if submitted today
-        user.submittedToday = lastSubmittedFixed.valueOf() === today;
-        user.lastUpdated = dateToString(new Date(today));
-        user = Object.assign(Object.assign(Object.assign({}, user), recentSubmission), { timestamp: timestamp.toISOString() });
+        user = Object.assign(Object.assign(Object.assign({}, user), recentSubmission), { submittedToday: lastSubmittedFixed.valueOf() === today, lastUpdated: dateToString(new Date(today)), timestamp: timestamp.toISOString() });
         // Update the database entity
         const { error } = yield supabase
             .from('UserData')

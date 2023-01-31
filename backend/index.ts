@@ -60,6 +60,12 @@ const getUpdatedUserData = async (user: UserSchema) => {
       return user;
     }
 
+    console.log(
+      `${user.username}. Recent Submission: ${JSON.stringify(
+        lcqRecentSubmission
+      )}`
+    );
+
     // Convert recent submission timestamp to date
     const newSubmissionDate = new Date(
       Number(lcqRecentSubmission?.timestamp) * 1000
@@ -85,12 +91,6 @@ const getUpdatedUserData = async (user: UserSchema) => {
         )
       );
     }
-
-    console.log(
-      `${user.username}. Recent Submission: ${JSON.stringify(
-        lcqRecentSubmission
-      )}`
-    );
 
     const today: number = new Date().setHours(0, 0, 0, 0);
 
