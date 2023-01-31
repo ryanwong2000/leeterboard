@@ -18,16 +18,6 @@ interface UserSchema {
   titleSlug: string;
 }
 
-interface LCUser {
-  id: number;
-  username: string;
-  submittedToday: boolean;
-  streak: number;
-  lastUpdated: Date;
-  lastSubmitted: Date;
-  recentSubmission: RecentSubmission;
-}
-
 interface SBUser {
   id: string;
   aud: string;
@@ -47,4 +37,4 @@ interface Hacker {
   recentSubmission: RecentSubmission;
 }
 
-export type { RecentSubmission, LCUser, UserSchema, Hacker };
+export type { RecentSubmission, UserSchema, Hacker };

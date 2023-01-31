@@ -4,18 +4,13 @@ import type { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { LeetCode } from 'leetcode-query';
 import bodyParser from 'body-parser';
-import type {
-  RecentSubmission,
-  LCUser,
-  UserSchema,
-  Hacker
-} from './types/types';
+import type { RecentSubmission, UserSchema, Hacker } from './types/types';
 import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 5454;
+const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
@@ -129,10 +124,24 @@ const getUpdatedUserData = async (user: UserSchema) => {
       .from('UserData')
       .update({ ...user })
       .eq('id', user.id);
+
+    return {
+      id: user.id,
+      username: user.username,
+      submittedToday: user.submittedToday,
+      streak: user.streak,
+      lastUpdated: new Date(today),
+      lastSubmitted: lastSubmittedFixed,
+      recentSubmission: {
+        lang: recentSubmission.lang,
+        title: recentSubmission.title,
+        titleSlug: recentSubmission.titleSlug,
+        statusDisplay: recentSubmission.statusDisplay,
+        timestamp: timestamp
+      }
+    } as Hacker;
   } catch (error) {
     console.log('ERROR', error);
-  } finally {
-    return user;
   }
 };
 
