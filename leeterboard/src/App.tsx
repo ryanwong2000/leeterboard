@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
-import type { LCUser } from '../types/types';
+import type { Hacker } from './types/types';
 import { User, OAuthResponse, UserResponse } from '@supabase/supabase-js';
 import { Board } from './components/Board/Board';
 
 function App() {
-  const [userData, setUserData] = useState<LCUser[]>([]);
+  const [userData, setUserData] = useState<Hacker[]>([]);
   const [user, setUser] = useState<User | null>();
 
   useEffect(() => {
@@ -44,7 +44,7 @@ function App() {
     const url = 'http://localhost:5000/getUpdatedUsers';
     const res = await fetch(url);
 
-    const updatedUserData = (await res.json()) as LCUser[];
+    const updatedUserData = (await res.json()) as Hacker[];
     updatedUserData.sort((a, b) => {
       if (a.streak !== b.streak) return b.streak - a.streak;
       return a.lastSubmitted > b.lastSubmitted ? -1 : 1;

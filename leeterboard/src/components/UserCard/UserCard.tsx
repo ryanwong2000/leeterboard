@@ -1,7 +1,7 @@
 import React from 'react';
-import type { LCUser } from '../../../types/types';
+import type { Hacker } from '../../types/types';
 
-export default function UserCard(props: { user: LCUser }) {
+export default function UserCard(props: { user: Hacker }) {
   return (
     <tr className="row">
       <td className="user">
@@ -23,8 +23,8 @@ export default function UserCard(props: { user: LCUser }) {
         {props.user.submittedToday ? '✅' : '❌'}
       </td>
       <td className="streak">{props.user.streak}</td>
-      <td className="lastAccepted">{props.user.title}</td>
-      <td className="language">{props.user.lang}</td>
+      <td className="lastAccepted">{props.user.recentSubmission.title}</td>
+      <td className="language">{props.user.recentSubmission.lang}</td>
     </tr>
   );
 }
