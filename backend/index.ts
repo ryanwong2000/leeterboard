@@ -74,8 +74,6 @@ const getUpdatedUserData = async (user: UserSchema) => {
 
     newSubmissionDate.setHours(0, 0, 0, 0);
 
-    const today: number = new Date().setHours(0, 0, 0, 0);
-
     // More recent submission than last submission, update last submission timestamp
     if (newSubmissionDate > lastSubmittedFixed) {
       lastSubmittedFixed = newSubmissionDate;
@@ -94,6 +92,8 @@ const getUpdatedUserData = async (user: UserSchema) => {
       )}`
     );
 
+    const today: number = new Date().setHours(0, 0, 0, 0);
+
     // Submitted > 1 day ago -> Reset streak
     if (lastSubmittedFixed.valueOf() < today - dayInMilliseconds) {
       user.streak = 0;
@@ -108,14 +108,11 @@ const getUpdatedUserData = async (user: UserSchema) => {
       user.timestamp = timestamp.toISOString();
     }
 
-    // Set submitted today if submitted today
-    user.submittedToday = lastSubmittedFixed.valueOf() === today;
-
-    user.lastUpdated = dateToString(new Date(today));
-
     user = {
       ...user,
       ...recentSubmission,
+      submittedToday: lastSubmittedFixed.valueOf() === today,
+      lastUpdated: dateToString(new Date(today)),
       timestamp: timestamp.toISOString()
     };
 
