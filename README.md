@@ -8,5 +8,7 @@ Uses the package https://github.com/JacobLinCool/LeetCode-Query to get public in
 - Backend as a Service (Supabase)
   - DBaaS
   - OAuth w Supabase
+  - Edge Functions
+    - Deno
 - Typescript
 - Vanilla CSS
