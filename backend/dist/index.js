@@ -32,52 +32,61 @@ const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_KEY || '';
 const supabaseSecret = process.env.SUPABASE_SECRET || '';
 const supabase = createClient(supabaseUrl, supabaseSecret);
+const stringToDate = (dateString) => {
+    // Convert the string to use commas instead of dashes (idk why but it works this way)
+    return new Date(dateString.replace('-', ','));
+};
+const dateToString = (date) => {
+    return date.toISOString().split('T')[0];
+};
 const getUpdatedUserData = (user) => __awaiter(void 0, void 0, void 0, function* () {
-    const dayInMilliseconds = 24 * 60 * 60 * 1000;
-    // Convert the string to use commas instead of dashes
-    const lastSubmittedString = user.lastSubmitted.replace('-', ',');
-    const lastUpdatedString = user.lastUpdated.replace('-', ',');
-    // Clean user dates (submitted and updated times)
-    let lastSubmittedFixed = new Date(lastSubmittedString);
-    let lastUpdatedFixed = new Date(lastUpdatedString);
-    const LCQRecentSubmission = yield getRecentAcceptedSubmission(user.username);
-    if (typeof LCQRecentSubmission === 'undefined') {
+    try {
+        const dayInMilliseconds = 24 * 60 * 60 * 1000;
+        // Clean user dates (submitted and updated times)
+        let lastSubmittedFixed = stringToDate(user.lastSubmitted);
+        let lastUpdatedFixed = stringToDate(user.lastUpdated);
+        const lcqRecentSubmission = yield getRecentAcceptedSubmission(user.username);
+        if (typeof lcqRecentSubmission === 'undefined') {
+            return user;
+        }
+        // Convert recent submission timestamp to date
+        const newSubmissionDate = new Date(Number(lcqRecentSubmission === null || lcqRecentSubmission === void 0 ? void 0 : lcqRecentSubmission.timestamp) * 1000);
+        const timestamp = new Date(newSubmissionDate);
+        const recentSubmission = Object.assign(Object.assign({}, lcqRecentSubmission), { timestamp: timestamp });
+        newSubmissionDate.setHours(0, 0, 0, 0);
+        const today = new Date().setHours(0, 0, 0, 0);
+        // More recent submission than last submission, update last submission timestamp
+        if (newSubmissionDate > lastSubmittedFixed) {
+            lastSubmittedFixed = newSubmissionDate;
+            user.lastSubmitted = dateToString(new Date(newSubmissionDate.getFullYear(), newSubmissionDate.getMonth(), newSubmissionDate.getDate()));
+        }
+        console.log(`${user.username}. Recent Submission: ${JSON.stringify(lcqRecentSubmission)}`);
+        // Submitted > 1 day ago -> Reset streak
+        if (lastSubmittedFixed.valueOf() < today - dayInMilliseconds) {
+            user.streak = 0;
+        }
+        // Didn't update yet today and submitted today -> Increment streak
+        else if (lastUpdatedFixed.valueOf() < today &&
+            lastSubmittedFixed.valueOf() === today) {
+            user.streak++;
+            user.timestamp = timestamp.toISOString();
+        }
+        // Set submitted today if submitted today
+        user.submittedToday = lastSubmittedFixed.valueOf() === today;
+        user.lastUpdated = dateToString(new Date(today));
+        user = Object.assign(Object.assign(Object.assign({}, user), recentSubmission), { timestamp: timestamp.toISOString() });
+        // Update the database entity
+        const { error } = yield supabase
+            .from('UserData')
+            .update(Object.assign({}, user))
+            .eq('id', user.id);
+    }
+    catch (error) {
+        console.log('ERROR', error);
+    }
+    finally {
         return user;
     }
-    // Convert recent submission timestamp to date
-    const newSubmissionDate = new Date(Number(LCQRecentSubmission === null || LCQRecentSubmission === void 0 ? void 0 : LCQRecentSubmission.timestamp) * 1000);
-    const timestamp = new Date(newSubmissionDate);
-    const recentSubmission = Object.assign(Object.assign({}, LCQRecentSubmission), { timestamp: new Date(newSubmissionDate) });
-    newSubmissionDate.setHours(0, 0, 0, 0);
-    const today = new Date().setHours(0, 0, 0, 0);
-    // More recent submission than last submission, update last submission timestamp
-    if (newSubmissionDate > lastSubmittedFixed) {
-        lastSubmittedFixed = newSubmissionDate;
-        user.lastSubmitted = new Date(newSubmissionDate.getFullYear(), newSubmissionDate.getMonth(), newSubmissionDate.getDate())
-            .toISOString()
-            .split('T')[0];
-    }
-    console.log(`${user.username}. Recent Submission: ${JSON.stringify(LCQRecentSubmission)}`);
-    // Submitted > 1 day ago -> Reset streak
-    if (lastSubmittedFixed.valueOf() < today - dayInMilliseconds) {
-        user.streak = 0;
-    }
-    // Didn't update yet today and submitted today -> Increment streak
-    else if (lastUpdatedFixed.valueOf() < today &&
-        lastSubmittedFixed.valueOf() === today) {
-        user.streak++;
-        user.timestamp = timestamp.toISOString();
-    }
-    // Set submitted today if submitted today
-    user.submittedToday = lastSubmittedFixed.valueOf() === today;
-    user.lastUpdated = new Date(today).toISOString().split('T')[0];
-    user = Object.assign(Object.assign(Object.assign({}, user), recentSubmission), { timestamp: timestamp.toISOString() });
-    // Update the database entity
-    const { error } = yield supabase
-        .from('UserData')
-        .update(Object.assign({}, user))
-        .eq('id', user.id);
-    return user;
 });
 app.get('/getUpdatedUsers', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { data, error } = yield supabase.from('UserData').select();

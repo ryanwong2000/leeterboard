@@ -40,6 +40,10 @@ const stringToDate = (dateString: string) => {
   return new Date(dateString.replace('-', ','));
 };
 
+const dateToString = (date: Date) => {
+  return date.toISOString().split('T')[0];
+};
+
 const getUpdatedUserData = async (user: UserSchema) => {
   try {
     const dayInMilliseconds = 24 * 60 * 60 * 1000;
@@ -65,7 +69,7 @@ const getUpdatedUserData = async (user: UserSchema) => {
 
     const recentSubmission: RecentSubmission = {
       ...lcqRecentSubmission,
-      timestamp: new Date(newSubmissionDate)
+      timestamp: timestamp
     };
 
     newSubmissionDate.setHours(0, 0, 0, 0);
@@ -75,13 +79,13 @@ const getUpdatedUserData = async (user: UserSchema) => {
     // More recent submission than last submission, update last submission timestamp
     if (newSubmissionDate > lastSubmittedFixed) {
       lastSubmittedFixed = newSubmissionDate;
-      user.lastSubmitted = new Date(
-        newSubmissionDate.getFullYear(),
-        newSubmissionDate.getMonth(),
-        newSubmissionDate.getDate()
-      )
-        .toISOString()
-        .split('T')[0];
+      user.lastSubmitted = dateToString(
+        new Date(
+          newSubmissionDate.getFullYear(),
+          newSubmissionDate.getMonth(),
+          newSubmissionDate.getDate()
+        )
+      );
     }
 
     console.log(
@@ -107,7 +111,7 @@ const getUpdatedUserData = async (user: UserSchema) => {
     // Set submitted today if submitted today
     user.submittedToday = lastSubmittedFixed.valueOf() === today;
 
-    user.lastUpdated = new Date(today).toISOString().split('T')[0];
+    user.lastUpdated = dateToString(new Date(today));
 
     user = {
       ...user,
