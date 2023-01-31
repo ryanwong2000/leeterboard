@@ -37,4 +37,14 @@ interface SBUser {
   provider: string;
 }
 
-export type { RecentSubmission, LCUser, UserSchema };
+interface Hacker {
+  id: number;
+  username: string;
+  submittedToday: boolean;
+  streak: number;
+  lastUpdated: Date;
+  lastSubmitted: Date;
+  recentSubmission: RecentSubmission;
+}
+
+export type { RecentSubmission, LCUser, UserSchema, Hacker };

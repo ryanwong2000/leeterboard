@@ -1,11 +1,15 @@
 import express from 'express';
 import cors from 'cors';
-import type { Express, Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { LeetCode } from 'leetcode-query';
-import type { RecentSubmission as LCQRecentSubmission } from 'leetcode-query';
 import bodyParser from 'body-parser';
-import type { RecentSubmission, LCUser, UserSchema } from './types/types';
+import type {
+  RecentSubmission,
+  LCUser,
+  UserSchema,
+  Hacker
+} from './types/types';
 import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
