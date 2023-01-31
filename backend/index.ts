@@ -45,6 +45,7 @@ const dateToString = (date: Date) => {
 };
 
 const getUpdatedUserData = async (user: UserSchema) => {
+  console.log(user);
   try {
     const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
@@ -67,8 +68,9 @@ const getUpdatedUserData = async (user: UserSchema) => {
     );
 
     // Convert recent submission timestamp to date
+    // the ts from lc is in utc so i make it est
     const newSubmissionDate = new Date(
-      Number(lcqRecentSubmission?.timestamp) * 1000
+      (Number(lcqRecentSubmission?.timestamp) - 18000) * 1000
     );
 
     const timestamp = new Date(newSubmissionDate);

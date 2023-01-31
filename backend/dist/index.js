@@ -40,6 +40,7 @@ const dateToString = (date) => {
     return date.toISOString().split('T')[0];
 };
 const getUpdatedUserData = (user) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(user);
     try {
         const dayInMilliseconds = 24 * 60 * 60 * 1000;
         // Clean user dates (submitted and updated times)
@@ -51,7 +52,8 @@ const getUpdatedUserData = (user) => __awaiter(void 0, void 0, void 0, function*
         }
         console.log(`${user.username}. Recent Submission: ${JSON.stringify(lcqRecentSubmission)}`);
         // Convert recent submission timestamp to date
-        const newSubmissionDate = new Date(Number(lcqRecentSubmission === null || lcqRecentSubmission === void 0 ? void 0 : lcqRecentSubmission.timestamp) * 1000);
+        // the ts from lc is in utc so i make it est
+        const newSubmissionDate = new Date((Number(lcqRecentSubmission === null || lcqRecentSubmission === void 0 ? void 0 : lcqRecentSubmission.timestamp) - 18000) * 1000);
         const timestamp = new Date(newSubmissionDate);
         const recentSubmission = Object.assign(Object.assign({}, lcqRecentSubmission), { timestamp: timestamp });
         newSubmissionDate.setHours(0, 0, 0, 0);
