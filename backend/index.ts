@@ -43,7 +43,9 @@ const stringToDate = (dateString: string) => {
   // Convert the string to use commas instead of dashes (idk why but it works this way)
   return new Date(dateString.replace('-', ','));
 };
-
+/**
+ * Does not have time
+ */
 const dateToString = (date: Date) => {
   return date.toISOString().split('T')[0];
 };
@@ -72,17 +74,17 @@ const getUpdatedUserData = async (user: UserSchema) => {
     );
 
     // Convert recent submission timestamp to date
-    // the ts from lc is in utc so i make it est
-    const newSubmissionDate = new Date(
+    // the TS from LC is in UTC so we make it EST
+    const timestamp = new Date(
       (Number(lcqRecentSubmission?.timestamp) - 18000) * 1000
     );
-
-    const timestamp = new Date(newSubmissionDate);
 
     const recentSubmission: RecentSubmission = {
       ...lcqRecentSubmission,
       timestamp: timestamp
     };
+
+    const newSubmissionDate = new Date(timestamp);
 
     newSubmissionDate.setHours(0, 0, 0, 0);
 
