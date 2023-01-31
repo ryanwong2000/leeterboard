@@ -1,16 +1,6 @@
-interface Submission {
-  lang: string;
-  statusDisplay: string;
-  timestamp: string | Date;
-  title: string;
-  titleSlug: string;
-}
+import type { RecentSubmission as LCQRecentSubmission } from 'leetcode-query';
 
-interface LeetCodeQuerySubmission extends Submission {
-  timestamp: string;
-}
-
-interface RecentSubmission extends Submission {
+interface RecentSubmission extends Omit<LCQRecentSubmission, 'timestamp'> {
   timestamp: Date;
 }
 
@@ -47,4 +37,4 @@ interface SBUser {
   provider: string;
 }
 
-export type { LeetCodeQuerySubmission, RecentSubmission, LCUser, UserSchema };
+export type { RecentSubmission, LCUser, UserSchema };

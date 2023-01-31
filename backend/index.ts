@@ -3,13 +3,9 @@ import cors from 'cors';
 import type { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { LeetCode } from 'leetcode-query';
+import type { RecentSubmission as LCQRecentSubmission } from 'leetcode-query';
 import bodyParser from 'body-parser';
-import type {
-  LeetCodeQuerySubmission,
-  RecentSubmission,
-  LCUser,
-  UserSchema
-} from './types/types';
+import type { RecentSubmission, LCUser, UserSchema } from './types/types';
 import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
@@ -25,15 +21,10 @@ const supabaseSecret: string = process.env.SUPABASE_SECRET || '';
 
 const supabase = createClient(supabaseUrl, supabaseSecret);
 
-const getRecentAcceptedSubmission = async (
-  username: string
-): Promise<LeetCodeQuerySubmission | undefined> => {
-  const submissions: LeetCodeQuerySubmission[] = await lc.recent_submissions(
-    username
-  );
+const getRecentAcceptedSubmission = async (username: string) => {
+  const submissions = await lc.recent_submissions(username);
   return submissions.find(
-    (submission: LeetCodeQuerySubmission) =>
-      submission.statusDisplay === 'Accepted'
+    (submission) => submission.statusDisplay === 'Accepted'
   );
 };
 
@@ -63,22 +54,22 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
 
       let lastUpdatedFixed: Date = new Date(lastUpdatedString);
 
-      const LeetCodeQuerySubmission: LeetCodeQuerySubmission | undefined =
+      const LCQRecentSubmission: LCQRecentSubmission | undefined =
         await getRecentAcceptedSubmission(user.username);
 
-      if (typeof LeetCodeQuerySubmission === 'undefined') {
+      if (typeof LCQRecentSubmission === 'undefined') {
         return user;
       }
 
       // Convert recent submission timestamp to date
       const newSubmissionDate = new Date(
-        Number(LeetCodeQuerySubmission?.timestamp) * 1000
+        Number(LCQRecentSubmission?.timestamp) * 1000
       );
 
       const timestamp = new Date(newSubmissionDate);
 
       const recentSubmission: RecentSubmission = {
-        ...LeetCodeQuerySubmission,
+        ...LCQRecentSubmission,
         timestamp: new Date(newSubmissionDate)
       };
 
@@ -100,7 +91,7 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
 
       console.log(
         `${user.username}. Recent Submission: ${JSON.stringify(
-          LeetCodeQuerySubmission
+          LCQRecentSubmission
         )}`
       );
 
