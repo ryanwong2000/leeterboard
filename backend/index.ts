@@ -46,7 +46,6 @@ const dateToString = (date: Date) => {
 };
 
 const getUpdatedUserData = async (user: UserSchema) => {
-  console.log(user);
   try {
     const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
@@ -66,9 +65,7 @@ const getUpdatedUserData = async (user: UserSchema) => {
 
     // Convert recent submission timestamp to date
     // the TS from LC is in UTC so we make it EST
-    const timestamp = new Date(
-      (Number(lcqRecentSubmission?.timestamp) - 18000) * 1000
-    );
+    const timestamp = new Date(Number(lcqRecentSubmission?.timestamp) * 1000);
 
     const recentSubmission: RecentSubmission = {
       ...lcqRecentSubmission,
@@ -151,7 +148,6 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
 
   const userData: UserSchema[] = data ?? [];
 
-  // TODO: make this not concurrent (like da hackathon)
   const updatedUserData = await Promise.all(userData.map(getUpdatedUserData));
 
   res.status(200).json(updatedUserData);
