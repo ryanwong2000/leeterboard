@@ -35,17 +35,18 @@ const supabaseSecret: string = process.env.SUPABASE_SECRET || '';
 
 const supabase = createClient(supabaseUrl, supabaseSecret);
 
+const stringToDate = (dateString: string) => {
+  // Convert the string to use commas instead of dashes (idk why but it works this way)
+  return new Date(dateString.replace('-', ','));
+};
+
 const getUpdatedUserData = async (user: UserSchema) => {
   const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
-  // Convert the string to use commas instead of dashes
-  const lastSubmittedString = user.lastSubmitted.replace('-', ',');
-  const lastUpdatedString = user.lastUpdated.replace('-', ',');
-
   // Clean user dates (submitted and updated times)
-  let lastSubmittedFixed = new Date(lastSubmittedString);
+  let lastSubmittedFixed = stringToDate(user.lastSubmitted);
 
-  let lastUpdatedFixed = new Date(lastUpdatedString);
+  let lastUpdatedFixed = stringToDate(user.lastUpdated);
 
   const LCQRecentSubmission = await getRecentAcceptedSubmission(user.username);
 
