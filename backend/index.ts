@@ -41,85 +41,90 @@ const stringToDate = (dateString: string) => {
 };
 
 const getUpdatedUserData = async (user: UserSchema) => {
-  const dayInMilliseconds = 24 * 60 * 60 * 1000;
+  try {
+    const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
-  // Clean user dates (submitted and updated times)
-  let lastSubmittedFixed = stringToDate(user.lastSubmitted);
+    // Clean user dates (submitted and updated times)
+    let lastSubmittedFixed = stringToDate(user.lastSubmitted);
+    let lastUpdatedFixed = stringToDate(user.lastUpdated);
 
-  let lastUpdatedFixed = stringToDate(user.lastUpdated);
+    const lcqRecentSubmission = await getRecentAcceptedSubmission(
+      user.username
+    );
 
-  const LCQRecentSubmission = await getRecentAcceptedSubmission(user.username);
+    if (typeof lcqRecentSubmission === 'undefined') {
+      return user;
+    }
 
-  if (typeof LCQRecentSubmission === 'undefined') {
+    // Convert recent submission timestamp to date
+    const newSubmissionDate = new Date(
+      Number(lcqRecentSubmission?.timestamp) * 1000
+    );
+
+    const timestamp = new Date(newSubmissionDate);
+
+    const recentSubmission: RecentSubmission = {
+      ...lcqRecentSubmission,
+      timestamp: new Date(newSubmissionDate)
+    };
+
+    newSubmissionDate.setHours(0, 0, 0, 0);
+
+    const today: number = new Date().setHours(0, 0, 0, 0);
+
+    // More recent submission than last submission, update last submission timestamp
+    if (newSubmissionDate > lastSubmittedFixed) {
+      lastSubmittedFixed = newSubmissionDate;
+      user.lastSubmitted = new Date(
+        newSubmissionDate.getFullYear(),
+        newSubmissionDate.getMonth(),
+        newSubmissionDate.getDate()
+      )
+        .toISOString()
+        .split('T')[0];
+    }
+
+    console.log(
+      `${user.username}. Recent Submission: ${JSON.stringify(
+        lcqRecentSubmission
+      )}`
+    );
+
+    // Submitted > 1 day ago -> Reset streak
+    if (lastSubmittedFixed.valueOf() < today - dayInMilliseconds) {
+      user.streak = 0;
+    }
+
+    // Didn't update yet today and submitted today -> Increment streak
+    else if (
+      lastUpdatedFixed.valueOf() < today &&
+      lastSubmittedFixed.valueOf() === today
+    ) {
+      user.streak++;
+      user.timestamp = timestamp.toISOString();
+    }
+
+    // Set submitted today if submitted today
+    user.submittedToday = lastSubmittedFixed.valueOf() === today;
+
+    user.lastUpdated = new Date(today).toISOString().split('T')[0];
+
+    user = {
+      ...user,
+      ...recentSubmission,
+      timestamp: timestamp.toISOString()
+    };
+
+    // Update the database entity
+    const { error }: { error: any } = await supabase
+      .from('UserData')
+      .update({ ...user })
+      .eq('id', user.id);
+  } catch (error) {
+    console.log('ERROR', error);
+  } finally {
     return user;
   }
-
-  // Convert recent submission timestamp to date
-  const newSubmissionDate = new Date(
-    Number(LCQRecentSubmission?.timestamp) * 1000
-  );
-
-  const timestamp = new Date(newSubmissionDate);
-
-  const recentSubmission: RecentSubmission = {
-    ...LCQRecentSubmission,
-    timestamp: new Date(newSubmissionDate)
-  };
-
-  newSubmissionDate.setHours(0, 0, 0, 0);
-
-  const today: number = new Date().setHours(0, 0, 0, 0);
-
-  // More recent submission than last submission, update last submission timestamp
-  if (newSubmissionDate > lastSubmittedFixed) {
-    lastSubmittedFixed = newSubmissionDate;
-    user.lastSubmitted = new Date(
-      newSubmissionDate.getFullYear(),
-      newSubmissionDate.getMonth(),
-      newSubmissionDate.getDate()
-    )
-      .toISOString()
-      .split('T')[0];
-  }
-
-  console.log(
-    `${user.username}. Recent Submission: ${JSON.stringify(
-      LCQRecentSubmission
-    )}`
-  );
-
-  // Submitted > 1 day ago -> Reset streak
-  if (lastSubmittedFixed.valueOf() < today - dayInMilliseconds) {
-    user.streak = 0;
-  }
-
-  // Didn't update yet today and submitted today -> Increment streak
-  else if (
-    lastUpdatedFixed.valueOf() < today &&
-    lastSubmittedFixed.valueOf() === today
-  ) {
-    user.streak++;
-    user.timestamp = timestamp.toISOString();
-  }
-
-  // Set submitted today if submitted today
-  user.submittedToday = lastSubmittedFixed.valueOf() === today;
-
-  user.lastUpdated = new Date(today).toISOString().split('T')[0];
-
-  user = {
-    ...user,
-    ...recentSubmission,
-    timestamp: timestamp.toISOString()
-  };
-
-  // Update the database entity
-  const { error }: { error: any } = await supabase
-    .from('UserData')
-    .update({ ...user })
-    .eq('id', user.id);
-
-  return user;
 };
 
 app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
