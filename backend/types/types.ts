@@ -5,7 +5,6 @@ interface RecentSubmission extends Omit<LCQRecentSubmission, 'timestamp'> {
 }
 
 interface UserSchema {
-  id: number;
   username: string;
   submittedToday: boolean;
   streak: number;
@@ -18,17 +17,7 @@ interface UserSchema {
   titleSlug: string;
 }
 
-interface SBUser {
-  id: string;
-  aud: string;
-  role: string;
-  email: string;
-  email_confirmed_at: Date;
-  provider: string;
-}
-
 interface Hacker {
-  id: number;
   username: string;
   submittedToday: boolean;
   streak: number;
