@@ -13,6 +13,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
+app.use(bodyParser.json());
 
 const lc = new LeetCode();
 
@@ -45,7 +46,7 @@ const dateToString = (date: Date) => {
   return date.toISOString().split('T')[0];
 };
 
-const getUpdatedUserData = async (user: UserSchema): Promise<Hacker> => {
+const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
   let lcqRecentSubmission;
   try {
     lcqRecentSubmission = await getRecentAcceptedSubmission(user.username);
@@ -53,21 +54,7 @@ const getUpdatedUserData = async (user: UserSchema): Promise<Hacker> => {
     console.log('ERROR', error);
   }
   if (typeof lcqRecentSubmission === 'undefined') {
-    return {
-      id: user.id,
-      username: user.username,
-      submittedToday: false,
-      streak: 0,
-      lastUpdated: new Date(),
-      lastSubmitted: new Date(user.lastSubmitted),
-      recentSubmission: {
-        lang: user.lang,
-        title: user.title,
-        titleSlug: user.titleSlug,
-        statusDisplay: user.statusDisplay,
-        timestamp: new Date(Number(user.timestamp))
-      }
-    };
+    return user;
   }
 
   const dayInMilliseconds = 24 * 60 * 60 * 1000;
@@ -124,26 +111,25 @@ const getUpdatedUserData = async (user: UserSchema): Promise<Hacker> => {
     user.timestamp = timestamp.toISOString();
   }
 
-  user = {
-    ...user,
-    ...recentSubmission,
-    submittedToday: lastSubmittedFixed.valueOf() === today,
-    lastUpdated: dateToString(new Date(today)),
-    timestamp: timestamp.toISOString()
-  };
+  // user = {
+  //   ...user,
+  //   ...recentSubmission,
+  //   submittedToday: lastSubmittedFixed.valueOf() === today,
+  //   lastUpdated: dateToString(new Date(today)),
+  //   timestamp: timestamp.toISOString()
+  // };
 
   // Update the database entity
-  const { error }: { error: any } = await supabase
-    .from('UserData')
-    .update({ ...user })
-    .eq('id', user.id);
+  // const { error }: { error: any } = await supabase
+  //   .from('UserData')
+  //   .update({ ...user })
+  //   .eq('username', user.username);
 
   return {
-    id: user.id,
     username: user.username,
-    submittedToday: user.submittedToday,
+    submittedToday: lastSubmittedFixed.valueOf() === today,
     streak: user.streak,
-    lastUpdated: new Date(today),
+    lastUpdated: new Date(today).toLocaleString(),
     lastSubmitted: lastSubmittedFixed,
     recentSubmission: {
       lang: recentSubmission.lang,
@@ -162,11 +148,38 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
   const userData: UserSchema[] = data ?? [];
 
   const updatedUserData = await Promise.all(userData.map(getUpdatedUserData));
-
   res.status(200).json(updatedUserData);
 });
 
-app.post('createNewUser', async (req: Request, res: Response) => {});
+// app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
+//   const { error }: { error: any } = await supabase
+//     .from('UserData')
+//     .update({
+//       streak: 7,
+//       lastUpdated: new Date(2023, 1, 15, 23).toLocaleDateString()
+//     })
+//     .eq('username', 'kalsij');
+
+//   console.log('killymonjaro');
+//   res.status(200).json({});
+// });
+
+// app.post('createNewUser', async (req: Request, res: Response) => {
+//   const username = req.body.username;
+//   let lcqRecentSubmission;
+//   try {
+//     lcqRecentSubmission = await getRecentAcceptedSubmission(username);
+//   } catch (error) {
+//     console.log('ERROR', error);
+//   }
+
+//   const userData: UserSchema = {
+//     username: username,
+//     submittedToday: new Date(Number(lcqRecentSubmission?.timestamp)) == new Date()
+//   }
+
+//   const { data, error } = await supabase.from('UserData').insert();
+// });
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
