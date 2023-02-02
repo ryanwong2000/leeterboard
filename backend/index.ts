@@ -45,101 +45,114 @@ const dateToString = (date: Date) => {
   return date.toISOString().split('T')[0];
 };
 
-const getUpdatedUserData = async (user: UserSchema) => {
+const getUpdatedUserData = async (user: UserSchema): Promise<Hacker> => {
+  let lcqRecentSubmission;
   try {
-    const dayInMilliseconds = 24 * 60 * 60 * 1000;
+    lcqRecentSubmission = await getRecentAcceptedSubmission(user.username);
+  } catch (error) {
+    console.log('ERROR', error);
+  }
+  if (typeof lcqRecentSubmission === 'undefined') {
+    return {
+      id: user.id,
+      username: user.username,
+      submittedToday: false,
+      streak: 0,
+      lastUpdated: new Date(),
+      lastSubmitted: new Date(user.lastSubmitted),
+      recentSubmission: {
+        lang: user.lang,
+        title: user.title,
+        titleSlug: user.titleSlug,
+        statusDisplay: user.statusDisplay,
+        timestamp: new Date(Number(user.timestamp))
+      }
+    };
+  }
 
-    const lcqRecentSubmission = await getRecentAcceptedSubmission(
-      user.username
-    );
+  const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
-    if (typeof lcqRecentSubmission === 'undefined') {
-      return user;
-    }
-
+  if (user)
     console.log(
       `${user.username}. Recent Submission: ${JSON.stringify(
         lcqRecentSubmission
       )}`
     );
 
-    // Convert recent submission timestamp to date
-    // the TS from LC is in UTC so we make it EST
-    const timestamp = new Date(Number(lcqRecentSubmission?.timestamp) * 1000);
+  // Convert recent submission timestamp to date
+  // the TS from LC is in UTC so we make it EST
+  const timestamp = new Date(Number(lcqRecentSubmission?.timestamp) * 1000);
 
-    const recentSubmission: RecentSubmission = {
-      ...lcqRecentSubmission,
-      timestamp: timestamp
-    };
+  const recentSubmission: RecentSubmission = {
+    ...lcqRecentSubmission,
+    timestamp: timestamp
+  };
 
-    const newSubmissionFixed = new Date(timestamp);
+  const newSubmissionFixed = new Date(timestamp);
 
-    newSubmissionFixed.setHours(0, 0, 0, 0);
+  newSubmissionFixed.setHours(0, 0, 0, 0);
 
-    // Clean user dates (submitted and updated times)
-    let lastSubmittedFixed = stringToDate(user.lastSubmitted);
-    const lastUpdatedFixed = stringToDate(user.lastUpdated);
+  // Clean user dates (submitted and updated times)
+  let lastSubmittedFixed = stringToDate(user.lastSubmitted);
+  const lastUpdatedFixed = stringToDate(user.lastUpdated);
 
-    // More recent submission than last submission, update last submission timestamp
-    if (newSubmissionFixed > lastSubmittedFixed) {
-      lastSubmittedFixed = newSubmissionFixed;
-      user.lastSubmitted = dateToString(
-        new Date(
-          newSubmissionFixed.getFullYear(),
-          newSubmissionFixed.getMonth(),
-          newSubmissionFixed.getDate()
-        )
-      );
-    }
-
-    const today: number = new Date().setHours(0, 0, 0, 0);
-
-    // Submitted > 1 day ago -> Reset streak
-    if (lastSubmittedFixed.valueOf() < today - dayInMilliseconds) {
-      user.streak = 0;
-    }
-
-    // Didn't update yet today and submitted today -> Increment streak
-    else if (
-      lastUpdatedFixed.valueOf() < today &&
-      lastSubmittedFixed.valueOf() === today
-    ) {
-      user.streak++;
-      user.timestamp = timestamp.toISOString();
-    }
-
-    user = {
-      ...user,
-      ...recentSubmission,
-      submittedToday: lastSubmittedFixed.valueOf() === today,
-      lastUpdated: dateToString(new Date(today)),
-      timestamp: timestamp.toISOString()
-    };
-
-    // Update the database entity
-    const { error }: { error: any } = await supabase
-      .from('UserData')
-      .update({ ...user })
-      .eq('id', user.id);
-
-    return {
-      id: user.id,
-      username: user.username,
-      submittedToday: user.submittedToday,
-      streak: user.streak,
-      lastUpdated: new Date(today),
-      lastSubmitted: lastSubmittedFixed,
-      recentSubmission: {
-        lang: recentSubmission.lang,
-        title: recentSubmission.title,
-        titleSlug: recentSubmission.titleSlug,
-        statusDisplay: recentSubmission.statusDisplay,
-        timestamp: timestamp
-      }
-    } as Hacker;
-  } catch (error) {
-    console.log('ERROR', error);
+  // More recent submission than last submission, update last submission timestamp
+  if (newSubmissionFixed > lastSubmittedFixed) {
+    lastSubmittedFixed = newSubmissionFixed;
+    user.lastSubmitted = dateToString(
+      new Date(
+        newSubmissionFixed.getFullYear(),
+        newSubmissionFixed.getMonth(),
+        newSubmissionFixed.getDate()
+      )
+    );
   }
+
+  const today: number = new Date().setHours(0, 0, 0, 0);
+
+  // Submitted > 1 day ago -> Reset streak
+  if (lastSubmittedFixed.valueOf() < today - dayInMilliseconds) {
+    user.streak = 0;
+  }
+
+  // Didn't update yet today and submitted today -> Increment streak
+  else if (
+    lastUpdatedFixed.valueOf() < today &&
+    lastSubmittedFixed.valueOf() === today
+  ) {
+    user.streak++;
+    user.timestamp = timestamp.toISOString();
+  }
+
+  user = {
+    ...user,
+    ...recentSubmission,
+    submittedToday: lastSubmittedFixed.valueOf() === today,
+    lastUpdated: dateToString(new Date(today)),
+    timestamp: timestamp.toISOString()
+  };
+
+  // Update the database entity
+  const { error }: { error: any } = await supabase
+    .from('UserData')
+    .update({ ...user })
+    .eq('id', user.id);
+
+  return {
+    id: user.id,
+    username: user.username,
+    submittedToday: user.submittedToday,
+    streak: user.streak,
+    lastUpdated: new Date(today),
+    lastSubmitted: lastSubmittedFixed,
+    recentSubmission: {
+      lang: recentSubmission.lang,
+      title: recentSubmission.title,
+      titleSlug: recentSubmission.titleSlug,
+      statusDisplay: recentSubmission.statusDisplay,
+      timestamp: timestamp
+    }
+  };
 };
 
 app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
