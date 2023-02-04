@@ -46,6 +46,8 @@ const dateToString = (date: Date) => {
   return date.toISOString().split('T')[0];
 };
 
+const dateCompare = (d1: Date, d2: Date) => {};
+
 const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
   let lcqRecentSubmission;
   try {
@@ -68,20 +70,24 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
 
   // Convert recent submission timestamp to date
   // the TS from LC is in UTC so we make it EST
-  const timestamp = new Date(Number(lcqRecentSubmission?.timestamp) * 1000);
+  // const timestamp = new Date(Number(lcqRecentSubmission?.timestamp) * 1000);
 
-  const recentSubmission: RecentSubmission = {
-    ...lcqRecentSubmission,
-    timestamp: timestamp
-  };
+  // const recentSubmission: RecentSubmission = {
+  //   ...lcqRecentSubmission,
+  //   timestamp: timestamp
+  // };
 
-  const newSubmissionFixed = new Date(timestamp);
+  // const newSubmissionFixed = new Date(timestamp);
 
-  newSubmissionFixed.setHours(0, 0, 0, 0);
+  // newSubmissionFixed.setHours(0, 0, 0, 0);
+
+  const newSubmissionDate = new Date(
+    Number(lcqRecentSubmission?.timestamp) * 1000
+  );
 
   // Clean user dates (submitted and updated times)
-  let lastSubmittedFixed = stringToDate(user.lastSubmitted);
-  const lastUpdatedFixed = stringToDate(user.lastUpdated);
+  // let lastSubmittedFixed = stringToDate(user.lastSubmitted);
+  // const lastUpdatedFixed = stringToDate(user.lastUpdated);
 
   // More recent submission than last submission, update last submission timestamp
   if (newSubmissionFixed > lastSubmittedFixed) {
@@ -131,13 +137,11 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
     streak: user.streak,
     lastUpdated: new Date(today).toLocaleString(),
     lastSubmitted: lastSubmittedFixed,
-    recentSubmission: {
-      lang: recentSubmission.lang,
-      title: recentSubmission.title,
-      titleSlug: recentSubmission.titleSlug,
-      statusDisplay: recentSubmission.statusDisplay,
-      timestamp: timestamp
-    }
+    lang: recentSubmission.lang,
+    title: recentSubmission.title,
+    titleSlug: recentSubmission.titleSlug,
+    statusDisplay: recentSubmission.statusDisplay,
+    timestamp: timestamp
   };
 };
 
