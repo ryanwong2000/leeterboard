@@ -37,7 +37,7 @@ const supabase = createClient(supabaseUrl, supabaseSecret);
 
 const updateSupabase = async (user: UserSchema) => {
   const { error }: { error: any; } = await supabase
-    .from('UserData_duplicate')
+    .from('User Data')
     .update({ ...user })
     .eq('username', user.username);
   if (error) {
@@ -139,13 +139,13 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
 
 app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
   const { data, error }: { data: UserSchema[] | null; error: any; } =
-    await supabase.from('UserData_duplicate').select();
+    await supabase.from('User Data').select();
 
   const userData: UserSchema[] = data ?? [];
 
   const updatedUserData = await Promise.all(userData.map(getUpdatedUserData));
-  updatedUserData.map((user) => updateSupabase(user));
   const hackers = updatedUserData.map(userSchemaToHacker);
+  updatedUserData.map((user) => updateSupabase(user));
   res.status(200).json(hackers);
 });
 
@@ -163,7 +163,7 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
 
 //   }
 
-//   const { data, error } = await supabase.from('UserData').insert();
+//   const { data, error } = await supabase.from('User Data').insert();
 // });
 
 app.listen(port, () => {
