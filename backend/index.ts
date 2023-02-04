@@ -47,6 +47,15 @@ const updateSupabase = async (user: UserSchema) => {
   }
 };
 
+const bulkUpdateSupabase = async (users: UserSchema[]) => {
+  const { data, error } = await supabase.from('User Data').upsert(users);
+  if (error) {
+    console.log('ERROR updateSupabase', error);
+  } else {
+    console.log('UPDATED supabase', users);
+  }
+};
+
 const userSchemaToHacker = (user: UserSchema): Hacker => {
   return {
     ...user,
@@ -54,7 +63,7 @@ const userSchemaToHacker = (user: UserSchema): Hacker => {
     lastSubmitted: stringToDate(user.lastSubmitted),
     recentSubmission: {
       ...user,
-      timestamp: new Date(user.timestamp),
+      timestamp: new Date(user.timestamp)
     }
   };
 };
@@ -145,26 +154,18 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
 
   const updatedUserData = await Promise.all(userData.map(getUpdatedUserData));
   const hackers = updatedUserData.map(userSchemaToHacker);
-  updatedUserData.map((user) => updateSupabase(user));
   res.status(200).json(hackers);
+  // updatedUserData.map((user) => updateSupabase(user));
+  bulkUpdateSupabase(updatedUserData);
 });
 
+app.post('createNewUser', async (req: Request, res: Response) => {
+  const username = req.body.username;
 
-// app.post('createNewUser', async (req: Request, res: Response) => {
-//   const username = req.body.username;
-
-//   const userData: UserSchema = {
-//     username: username,
-//     submittedToday: false,
-//     streak: 0,
-//     lastUpdated: new Date(0).toLocaleDateString(),
-//     lastSubmitted: new Date(0).toLocaleDateString(),
-
-
-//   }
-
-//   const { data, error } = await supabase.from('User Data').insert();
-// });
+  const { data, error } = await supabase
+    .from('User Data')
+    .insert({ username: username });
+});
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
