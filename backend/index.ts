@@ -37,7 +37,7 @@ const supabase = createClient(supabaseUrl, supabaseSecret);
 
 const updateSupabase = async (user: UserSchema) => {
   const { error }: { error: any; } = await supabase
-    .from('UserData')
+    .from('UserData_duplicate')
     .update({ ...user })
     .eq('username', user.username);
   if (error) {
@@ -118,20 +118,20 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
     newSubmissionDate.toLocaleDateString() === today.toLocaleDateString()
   ) {
     user.streak++;
-    user.timestamp = newSubmissionDate.toISOString();
+    user.lastUpdated = new Date(today).toLocaleDateString();
   }
 
   const res = {
     username: user.username,
     submittedToday: user.lastSubmitted === today.toLocaleDateString(),
     streak: user.streak,
-    lastUpdated: new Date(today).toLocaleDateString(),
+    lastUpdated: user.lastUpdated,
     lastSubmitted: user.lastSubmitted,
     lang: lcqRecentSubmission.lang,
     title: lcqRecentSubmission.title,
     titleSlug: lcqRecentSubmission.titleSlug,
     statusDisplay: lcqRecentSubmission.statusDisplay,
-    timestamp: user.timestamp
+    timestamp: newSubmissionDate.toISOString()
   };
 
   return res;
@@ -139,7 +139,7 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
 
 app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
   const { data, error }: { data: UserSchema[] | null; error: any; } =
-    await supabase.from('UserData').select();
+    await supabase.from('UserData_duplicate').select();
 
   const userData: UserSchema[] = data ?? [];
 
@@ -152,16 +152,15 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
 
 // app.post('createNewUser', async (req: Request, res: Response) => {
 //   const username = req.body.username;
-//   let lcqRecentSubmission;
-//   try {
-//     lcqRecentSubmission = await getRecentAcceptedSubmission(username);
-//   } catch (error) {
-//     console.log('ERROR', error);
-//   }
 
 //   const userData: UserSchema = {
 //     username: username,
-//     submittedToday: new Date(Number(lcqRecentSubmission?.timestamp)) == new Date()
+//     submittedToday: false,
+//     streak: 0,
+//     lastUpdated: new Date(0).toLocaleDateString(),
+//     lastSubmitted: new Date(0).toLocaleDateString(),
+
+
 //   }
 
 //   const { data, error } = await supabase.from('UserData').insert();
