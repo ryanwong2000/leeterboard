@@ -35,24 +35,30 @@ const supabaseSecret: string = process.env.SUPABASE_SECRET || '';
 
 const supabase = createClient(supabaseUrl, supabaseSecret);
 
+const updateSupabase = async (user: UserSchema) => {
+  const { error }: { error: any; } = await supabase
+    .from('UserData')
+    .update({ ...user })
+    .eq('username', user.username);
+  if (error) {
+    console.log('ERROR updateSupabase', error);
+  } else {
+    console.log('UPDATED supabase', user);
+  }
+};
+
 const stringToDate = (dateString: string) => {
   // Convert the string to use commas instead of dashes (idk why but it works this way)
   return new Date(dateString.replace('-', ','));
 };
-// /**
-//  * Does not have time
-//  */
-// const dateToString = (date: Date) => {
-//   return date.toLocaleDateString();
-// };
 
 const submissionIsLate = (submission: string): boolean => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const yesterday = new Date(today)
-  yesterday.setDate(today.getDate() - 1)
-  const submissionDate = stringToDate(submission)
-  return submissionDate < yesterday
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const submissionDate = stringToDate(submission);
+  return submissionDate < yesterday;
 };
 
 const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
@@ -66,8 +72,6 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
     return user;
   }
 
-  // const dayInMilliseconds = 24 * 60 * 60 * 1000;
-
   if (user)
     console.log(
       `${user.username}. Recent Submission: ${JSON.stringify(
@@ -75,24 +79,9 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
       )}`
     );
 
-  // const timestamp = new Date(Number(lcqRecentSubmission?.timestamp) * 1000);
-
-  // const recentSubmission: RecentSubmission = {
-  //   ...lcqRecentSubmission,
-  //   timestamp: timestamp
-  // };
-
-  // const newSubmissionFixed = new Date(timestamp);
-
-  // newSubmissionFixed.setHours(0, 0, 0, 0);
-
   const newSubmissionDate = new Date(
     Number(lcqRecentSubmission?.timestamp) * 1000
   );
-
-  // Clean user dates (submitted and updated times)
-  // let lastSubmittedFixed = stringToDate(user.lastSubmitted);
-  // const lastUpdatedFixed = stringToDate(user.lastUpdated);
 
   // More recent submission than last submission, update last submission timestamp
   if (newSubmissionDate > stringToDate(user.lastSubmitted)) {
@@ -103,7 +92,7 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
     ).toLocaleDateString();
   }
 
-  const today = new Date()
+  const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   // Submitted > 1 day ago -> Reset streak
@@ -120,26 +109,11 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
     user.timestamp = newSubmissionDate.toISOString();
   }
 
-
-  // user = {
-  //   ...user,
-  //   ...recentSubmission,
-  //   submittedToday: lastSubmittedFixed.valueOf() === today,
-  //   lastUpdated: dateToString(new Date(today)),
-  //   timestamp: timestamp.toISOString()
-  // };
-
-  // Update the database entity
-  // const { error }: { error: any } = await supabase
-  //   .from('UserData')
-  //   .update({ ...user })
-  //   .eq('username', user.username);
-
-  return {
+  const res = {
     username: user.username,
     submittedToday: user.lastSubmitted === today.toLocaleDateString(),
     streak: user.streak,
-    lastUpdated: new Date(today).toLocaleString(),
+    lastUpdated: new Date(today).toLocaleDateString(),
     lastSubmitted: user.lastSubmitted,
     lang: lcqRecentSubmission.lang,
     title: lcqRecentSubmission.title,
@@ -147,30 +121,22 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
     statusDisplay: lcqRecentSubmission.statusDisplay,
     timestamp: user.timestamp
   };
+
+  return res;
 };
 
 app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
-  const { data, error }: { data: UserSchema[] | null; error: any } =
+  const { data, error }: { data: UserSchema[] | null; error: any; } =
     await supabase.from('UserData').select();
 
   const userData: UserSchema[] = data ?? [];
 
   const updatedUserData = await Promise.all(userData.map(getUpdatedUserData));
+  console.log(updatedUserData);
+  updatedUserData.map((user) => updateSupabase(user));
   res.status(200).json(updatedUserData);
 });
 
-// app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
-//   const { error }: { error: any } = await supabase
-//     .from('UserData')
-//     .update({
-//       streak: 7,
-//       lastUpdated: new Date(2023, 1, 15, 23).toLocaleDateString()
-//     })
-//     .eq('username', 'kalsij');
-
-//   console.log('killymonjaro');
-//   res.status(200).json({});
-// });
 
 // app.post('createNewUser', async (req: Request, res: Response) => {
 //   const username = req.body.username;
