@@ -39,14 +39,21 @@ const stringToDate = (dateString: string) => {
   // Convert the string to use commas instead of dashes (idk why but it works this way)
   return new Date(dateString.replace('-', ','));
 };
-/**
- * Does not have time
- */
-const dateToString = (date: Date) => {
-  return date.toISOString().split('T')[0];
-};
+// /**
+//  * Does not have time
+//  */
+// const dateToString = (date: Date) => {
+//   return date.toLocaleDateString();
+// };
 
-const dateCompare = (d1: Date, d2: Date) => {};
+const submissionIsLate = (submission: string): boolean => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const yesterday = new Date(today)
+  yesterday.setDate(today.getDate() - 1)
+  const submissionDate = stringToDate(submission)
+  return submissionDate < yesterday
+};
 
 const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
   let lcqRecentSubmission;
@@ -59,7 +66,7 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
     return user;
   }
 
-  const dayInMilliseconds = 24 * 60 * 60 * 1000;
+  // const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
   if (user)
     console.log(
@@ -68,8 +75,6 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
       )}`
     );
 
-  // Convert recent submission timestamp to date
-  // the TS from LC is in UTC so we make it EST
   // const timestamp = new Date(Number(lcqRecentSubmission?.timestamp) * 1000);
 
   // const recentSubmission: RecentSubmission = {
@@ -90,32 +95,31 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
   // const lastUpdatedFixed = stringToDate(user.lastUpdated);
 
   // More recent submission than last submission, update last submission timestamp
-  if (newSubmissionFixed > lastSubmittedFixed) {
-    lastSubmittedFixed = newSubmissionFixed;
-    user.lastSubmitted = dateToString(
-      new Date(
-        newSubmissionFixed.getFullYear(),
-        newSubmissionFixed.getMonth(),
-        newSubmissionFixed.getDate()
-      )
-    );
+  if (newSubmissionDate > stringToDate(user.lastSubmitted)) {
+    user.lastSubmitted = new Date(
+      newSubmissionDate.getFullYear(),
+      newSubmissionDate.getMonth(),
+      newSubmissionDate.getDate()
+    ).toLocaleDateString();
   }
 
-  const today: number = new Date().setHours(0, 0, 0, 0);
+  const today = new Date()
+  today.setHours(0, 0, 0, 0);
 
   // Submitted > 1 day ago -> Reset streak
-  if (lastSubmittedFixed.valueOf() < today - dayInMilliseconds) {
+  if (submissionIsLate(user.lastSubmitted)) {
     user.streak = 0;
   }
 
   // Didn't update yet today and submitted today -> Increment streak
   else if (
-    lastUpdatedFixed.valueOf() < today &&
-    lastSubmittedFixed.valueOf() === today
+    stringToDate(user.lastUpdated) < today &&
+    newSubmissionDate.toLocaleDateString() === today.toLocaleDateString()
   ) {
     user.streak++;
-    user.timestamp = timestamp.toISOString();
+    user.timestamp = newSubmissionDate.toISOString();
   }
+
 
   // user = {
   //   ...user,
@@ -133,15 +137,15 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
 
   return {
     username: user.username,
-    submittedToday: lastSubmittedFixed.valueOf() === today,
+    submittedToday: user.lastSubmitted === today.toLocaleDateString(),
     streak: user.streak,
     lastUpdated: new Date(today).toLocaleString(),
-    lastSubmitted: lastSubmittedFixed,
-    lang: recentSubmission.lang,
-    title: recentSubmission.title,
-    titleSlug: recentSubmission.titleSlug,
-    statusDisplay: recentSubmission.statusDisplay,
-    timestamp: timestamp
+    lastSubmitted: user.lastSubmitted,
+    lang: lcqRecentSubmission.lang,
+    title: lcqRecentSubmission.title,
+    titleSlug: lcqRecentSubmission.titleSlug,
+    statusDisplay: lcqRecentSubmission.statusDisplay,
+    timestamp: user.timestamp
   };
 };
 
