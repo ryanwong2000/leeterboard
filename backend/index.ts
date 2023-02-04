@@ -47,6 +47,18 @@ const updateSupabase = async (user: UserSchema) => {
   }
 };
 
+const userSchemaToHacker = (user: UserSchema): Hacker => {
+  return {
+    ...user,
+    lastUpdated: stringToDate(user.lastUpdated),
+    lastSubmitted: stringToDate(user.lastSubmitted),
+    recentSubmission: {
+      ...user,
+      timestamp: new Date(user.timestamp),
+    }
+  };
+};
+
 const stringToDate = (dateString: string) => {
   // Convert the string to use commas instead of dashes (idk why but it works this way)
   return new Date(dateString.replace('-', ','));
@@ -133,7 +145,8 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
 
   const updatedUserData = await Promise.all(userData.map(getUpdatedUserData));
   updatedUserData.map((user) => updateSupabase(user));
-  res.status(200).json(updatedUserData);
+  const hackers = updatedUserData.map(userSchemaToHacker);
+  res.status(200).json(hackers);
 });
 
 
