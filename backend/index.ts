@@ -132,7 +132,6 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
   const userData: UserSchema[] = data ?? [];
 
   const updatedUserData = await Promise.all(userData.map(getUpdatedUserData));
-  console.log(updatedUserData);
   updatedUserData.map((user) => updateSupabase(user));
   res.status(200).json(updatedUserData);
 });
