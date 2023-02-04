@@ -159,12 +159,21 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
   bulkUpdateSupabase(updatedUserData);
 });
 
-app.post('createNewUser', async (req: Request, res: Response) => {
+app.post('/createNewUser', async (req: Request, res: Response) => {
   const username = req.body.username;
 
   const { data, error } = await supabase
     .from('User Data')
-    .insert({ username: username });
+    .insert({ username: username })
+    .select();
+  if (error) {
+    console.log('ERROR inserting new user', username, error);
+    res.status(409).json(error);
+  }
+  else {
+    console.log('INSERTED', data);
+    res.status(200).json(data);
+  }
 });
 
 app.listen(port, () => {
