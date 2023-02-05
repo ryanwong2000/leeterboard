@@ -58,11 +58,16 @@ const bulkUpdateSupabase = async (users: UserSchema[]) => {
 
 const userSchemaToHacker = (user: UserSchema): Hacker => {
   return {
-    ...user,
+    username: user.username,
+    submittedToday: user.submittedToday,
+    streak: user.streak,
     lastUpdated: stringToDate(user.lastUpdated),
     lastSubmitted: stringToDate(user.lastSubmitted),
     recentSubmission: {
-      ...user,
+      lang: user.lang,
+      statusDisplay: user.statusDisplay,
+      title: user.title,
+      titleSlug: user.titleSlug,
       timestamp: new Date(user.timestamp)
     }
   };
