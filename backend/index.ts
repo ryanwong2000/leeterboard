@@ -1,11 +1,13 @@
-import express from 'express';
-import cors from 'cors';
-import type { Request, Response } from 'express';
-import dotenv from 'dotenv';
-import { LeetCode } from 'leetcode-query';
-import bodyParser from 'body-parser';
-import type { RecentSubmission, UserSchema, Hacker } from './types/types';
-import { createClient } from '@supabase/supabase-js';
+import express from "express";
+import cors from "cors";
+import type { Request, Response } from "express";
+import dotenv from "dotenv";
+import { LeetCode } from "leetcode-query";
+import type { RecentSubmission as LCQRecentSubmission } from "leetcode-query";
+import bodyParser from "body-parser";
+import type { RecentSubmission, UserSchema, Hacker } from "./types/types";
+import { createClient } from "@supabase/supabase-js";
+import { get } from "https";
 
 dotenv.config();
 
@@ -17,42 +19,69 @@ app.use(bodyParser.json());
 
 const lc = new LeetCode();
 
+// const getRecentAcceptedSubmission = async (username: string) => {
+//   try {
+//     const submissions = await lc.recent_submissions(username);
+//     console.log("submissions", submissions);
+//     return submissions.find(
+//       (submission) => submission.statusDisplay === "Accepted"
+//     );
+//   } catch (error) {
+//     console.log("ERROR", error);
+//     return;
+//   }
+// };
+
 const getRecentAcceptedSubmission = async (username: string) => {
   try {
-    const submissions = await lc.recent_submissions(username);
-    return submissions.find(
-      (submission) => submission.statusDisplay === 'Accepted'
+    const profile = await lc.user(username);
+    const user = profile.matchedUser;
+    const submissions = profile.recentSubmissionList;
+    if (user === null || submissions === null) {
+      console.log(`getLeetCodeUser ERROR: user [${username}] not found`);
+      return;
+    }
+    // console.log("submissions", submissions);
+    const recentSubmission = submissions.find(
+      (submission) => submission.statusDisplay === "Accepted"
     );
+    if (recentSubmission === undefined) {
+      console.log(
+        `getLeetCodeUser ERROR: no recent submission for ${username}`
+      );
+      return;
+    }
+    return recentSubmission;
   } catch (error) {
-    console.log('ERROR', error);
+    console.log("getLeetCodeUser ERROR: ", error);
     return;
   }
 };
 
-const supabaseUrl: string = process.env.SUPABASE_URL || '';
-const supabaseKey: string = process.env.SUPABASE_KEY || '';
-const supabaseSecret: string = process.env.SUPABASE_SECRET || '';
+const supabaseUrl: string = process.env.SUPABASE_URL || "";
+const supabaseKey: string = process.env.SUPABASE_KEY || "";
+const supabaseSecret: string = process.env.SUPABASE_SECRET || "";
 
 const supabase = createClient(supabaseUrl, supabaseSecret);
 
 const updateSupabase = async (user: UserSchema) => {
   const { error }: { error: any; } = await supabase
-    .from('User Data')
+    .from("User Data")
     .update({ ...user })
-    .eq('username', user.username);
+    .eq("username", user.username);
   if (error) {
-    console.log('ERROR updateSupabase', error);
+    console.log("ERROR updateSupabase", error);
   } else {
-    console.log('UPDATED supabase', user);
+    console.log("UPDATED supabase", user);
   }
 };
 
 const bulkUpdateSupabase = async (users: UserSchema[]) => {
-  const { data, error } = await supabase.from('User Data').upsert(users);
+  const { data, error } = await supabase.from("User Data").upsert(users);
   if (error) {
-    console.log('ERROR updateSupabase', error);
+    console.log("ERROR updateSupabase", error);
   } else {
-    console.log('UPDATED supabase', users);
+    console.log("UPDATED supabase", users);
   }
 };
 
@@ -75,7 +104,7 @@ const userSchemaToHacker = (user: UserSchema): Hacker => {
 
 const stringToDate = (dateString: string) => {
   // Convert the string to use commas instead of dashes (idk why but it works this way)
-  return new Date(dateString.replace('-', ','));
+  return new Date(dateString.replace("-", ","));
 };
 
 const submissionIsLate = (submission: string): boolean => {
@@ -87,17 +116,7 @@ const submissionIsLate = (submission: string): boolean => {
   return submissionDate < yesterday;
 };
 
-const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
-  let lcqRecentSubmission;
-  try {
-    lcqRecentSubmission = await getRecentAcceptedSubmission(user.username);
-  } catch (error) {
-    console.log('ERROR', error);
-  }
-  if (typeof lcqRecentSubmission === 'undefined') {
-    return user;
-  }
-
+const updateUserData = (user: UserSchema, lcqRecentSubmission: LCQRecentSubmission): UserSchema => {
   if (user)
     console.log(
       `${user.username}. Recent Submission: ${JSON.stringify(
@@ -135,7 +154,7 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
     user.lastUpdated = new Date(today).toLocaleDateString();
   }
 
-  const res = {
+  return {
     username: user.username,
     submittedToday: user.lastSubmitted === today.toLocaleDateString(),
     streak: user.streak,
@@ -147,13 +166,26 @@ const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
     statusDisplay: lcqRecentSubmission.statusDisplay,
     timestamp: newSubmissionDate.toISOString()
   };
-
-  return res;
 };
 
-app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
+const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
+  let lcqRecentSubmission;
+  try {
+    lcqRecentSubmission = await getRecentAcceptedSubmission(user.username);
+  } catch (error) {
+    console.log("getUpdatedUserData ERROR:", error);
+  }
+  if (typeof lcqRecentSubmission === "undefined") {
+    console.log("getUpdatedUserData ERROR: no recent submission found");
+    return user;
+  }
+
+  return updateUserData(user, lcqRecentSubmission);
+};
+
+app.get("/getUpdatedUsers", async (req: Request, res: Response) => {
   const { data, error }: { data: UserSchema[] | null; error: any; } =
-    await supabase.from('User Data').select();
+    await supabase.from("User Data").select();
 
   const userData: UserSchema[] = data ?? [];
 
@@ -164,23 +196,29 @@ app.get('/getUpdatedUsers', async (req: Request, res: Response) => {
   bulkUpdateSupabase(updatedUserData);
 });
 
-app.post('/createNewUser', async (req: Request, res: Response) => {
+app.post("/createNewUser", async (req: Request, res: Response) => {
   const username = req.body.username;
 
+  const recentSubmission = await getRecentAcceptedSubmission(username);
+
+  if (recentSubmission === undefined) {
+    return res.status(404).json(`Leetcode user ${username} not found`);
+  }
+
   const { data, error } = await supabase
-    .from('User Data')
+    .from("User Data")
     .insert({ username: username })
     .select();
   if (error) {
-    console.log('ERROR inserting new user', username, error);
+    console.log("ERROR inserting new user", username, error);
     return res.status(409).json(error);
   }
-  console.log('/createNewUser [INSERTED]', data);
+
+  console.log("/createNewUser [INSERTED]", data);
   const newUserData = data[0] as UserSchema;
-  const updatedNewUser = await getUpdatedUserData(newUserData);
+  const updatedNewUser = updateUserData(newUserData, recentSubmission);
   await updateSupabase(updatedNewUser);
   res.status(200).json(userSchemaToHacker(updatedNewUser));
-
 });
 
 app.listen(port, () => {
