@@ -1,0 +1,45 @@
+:root {
+  --textColor: whitesmoke;
+}
+
+.inputContainer {
+  border: 1px solid var(--textColor);
+  border-radius: 1em;
+  display: flex;
+}
+
+.addUsername {
+  height: 1.5em;
+  color: var(--textColor);
+}
+
+.addUsername input[type='text'] {
+  /* display: none; */
+  padding: 0;
+  text-align: right;
+  background: transparent;
+  border: 0;
+  width: 0;
+  color: var(--textColor);
+  transition: width 0.2s linear;
+}
+
+.addUsername button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  outline: 0;
+  cursor: pointer;
+  color: var(--textColor);
+  width: 1.5em;
+}
+
+/* expand the input whe you hover the div */
+.addUsername:hover > input[type='text'] {
+  width: 140px;
+}
+
+.addUsername input[type='text']:focus {
+  outline: none;
+  width: 140px;
+}

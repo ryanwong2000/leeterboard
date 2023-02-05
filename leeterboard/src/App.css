@@ -2,3 +2,9 @@
   margin: auto;
   max-width: 50em;
 }
+
+.boardMenu {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

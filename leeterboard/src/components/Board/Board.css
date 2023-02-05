@@ -1,17 +1,14 @@
 :root {
   --avatardiameter: 2.5em;
   --avatargap: 1em;
+  --boardPadding: 5px;
+  --boardBorderSize: 1px;
 }
 
 .avatar {
   height: var(--avatardiameter);
   width: var(--avatardiameter);
   border-radius: 30%;
-}
-
-th.user {
-  /* position: relative;
-  left: calc(var(--avatardiameter) + var(--avatargap)); */
 }
 
 .avatarname {
@@ -21,13 +18,12 @@ th.user {
 }
 
 .board {
-  border-color: black;
-  padding: 5px;
-  border: 1px solid;
+  display: flex;
+  padding: var(--boardPadding);
+  border: var(--boardBorderSize) solid;
   border-radius: 10px;
-  /* margin: auto; */
   justify-content: center;
-  width: 100%;
+  width: calc(100% - --boardPadding);
 }
 
 table {
