@@ -20,11 +20,6 @@ th.user {
   gap: var(--avatargap);
 }
 
-.container {
-  margin: auto;
-  max-width: 50em;
-}
-
 .board {
   border-color: black;
   padding: 5px;

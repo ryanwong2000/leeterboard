@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient';
 import type { Hacker } from './types/types';
 import { User, OAuthResponse, UserResponse } from '@supabase/supabase-js';
 import { Board } from './components/Board/Board';
+import './App.css';
 
 function App() {
   const [userData, setUserData] = useState<Hacker[]>([]);
@@ -62,7 +63,10 @@ function App() {
       ) : (
         <button onClick={() => signInWithGitHub()}>Sign In with GitHub</button>
       )}
-      <Board userData={userData} />
+      <div className="container">
+        <h1>Leeterboard</h1>
+        <Board userData={userData} />
+      </div>
     </div>
   );
 }
