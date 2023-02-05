@@ -1,6 +1,8 @@
 :root {
   --avatardiameter: 2.5em;
   --avatargap: 1em;
+  --boardPadding: 5px;
+  --boardBorderSize: 1px;
 }
 
 .avatar {
@@ -9,30 +11,19 @@
   border-radius: 30%;
 }
 
-th.user {
-  /* position: relative;
-  left: calc(var(--avatardiameter) + var(--avatargap)); */
-}
-
 .avatarname {
   display: flex;
   align-items: center;
   gap: var(--avatargap);
 }
 
-.container {
-  margin: auto;
-  max-width: 50em;
-}
-
 .board {
-  border-color: black;
-  padding: 5px;
-  border: 1px solid;
+  display: flex;
+  padding: var(--boardPadding);
+  border: var(--boardBorderSize) solid;
   border-radius: 10px;
-  /* margin: auto; */
   justify-content: center;
-  width: 100%;
+  width: calc(100% - --boardPadding);
 }
 
 table {
@@ -41,7 +32,6 @@ table {
 }
 
 tr > * {
-  /* border-bottom: 1px solid gray; */
   text-align: left;
   padding: 0.8em;
 }
