@@ -58,6 +58,11 @@ function App() {
   };
 
   const addNewUser = async (username: string) => {
+    if (username === "") {
+      console.log("addNewUser: no input");
+      return;
+    }
+
     const url = "http://localhost:5000/createNewUser";
     console.log("Adding", username);
     const res = await fetch(url, {
@@ -65,6 +70,11 @@ function App() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: username })
     });
+
+    if (res.status !== 200) {
+      console.log("[ERROR] addNewUser", res);
+      return;
+    }
 
     const updatedUser = (await res.json()) as Hacker;
 

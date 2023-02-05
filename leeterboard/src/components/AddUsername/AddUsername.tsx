@@ -7,6 +7,7 @@ export const AddUsername = ({ addNewUser }) => {
   const handleChange = (e) => {
     e.preventDefault();
     addNewUser(username);
+    setUsername("");
   };
 
   return (
@@ -15,6 +16,7 @@ export const AddUsername = ({ addNewUser }) => {
         <input
           type="text"
           placeholder="Add User"
+          value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
         <button type="submit">+</button>
