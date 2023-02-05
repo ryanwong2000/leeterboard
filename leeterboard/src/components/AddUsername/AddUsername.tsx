@@ -1,23 +1,12 @@
 import React, { useState } from "react";
 import "./AddUsername.css";
 
-export const AddUsername = () => {
+export const AddUsername = ({ addNewUser }) => {
   const [username, setUsername] = useState("");
 
   const handleChange = (e) => {
     e.preventDefault();
     addNewUser(username);
-  };
-
-  const addNewUser = async (username: string) => {
-    const url = "http://localhost:5000/createNewUser";
-    console.log("Adding", username);
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: username })
-    });
-    console.log(res);
   };
 
   return (
