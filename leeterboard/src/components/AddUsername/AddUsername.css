@@ -3,8 +3,8 @@
 }
 
 .inputContainer {
-  border: 1px solid var(--textColor);
-  border-radius: 1em;
+  /* border-bottom: 1px solid var(--textColor); */
+  /* border-radius: 1em; */
   display: flex;
 }
 
@@ -13,13 +13,13 @@
   color: var(--textColor);
 }
 
-.addUsername input[type='text'] {
-  /* display: none; */
+.addUsername input[type="text"] {
   padding: 0;
-  text-align: right;
+  text-align: left;
   background: transparent;
   border: 0;
   width: 0;
+  height: 2rem;
   color: var(--textColor);
   transition: width 0.2s linear;
 }
@@ -31,15 +31,20 @@
   outline: 0;
   cursor: pointer;
   color: var(--textColor);
-  width: 1.5em;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--textColor);
+  border-radius: 0.7rem;
 }
 
 /* expand the input whe you hover the div */
-.addUsername:hover > input[type='text'] {
+.addUsername:hover > input[type="text"] {
   width: 140px;
+  border-bottom: 1px solid var(--textColor);
 }
 
-.addUsername input[type='text']:focus {
+.addUsername input[type="text"]:focus {
   outline: none;
   width: 140px;
+  border-bottom: 1px solid var(--textColor);
 }
