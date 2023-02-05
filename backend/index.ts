@@ -168,12 +168,14 @@ app.post('/createNewUser', async (req: Request, res: Response) => {
     .select();
   if (error) {
     console.log('ERROR inserting new user', username, error);
-    res.status(409).json(error);
+    return res.status(409).json(error);
   }
-  else {
-    console.log('INSERTED', data);
-    res.status(200).json(data);
-  }
+  console.log('/createNewUser [INSERTED]', data);
+  const newUserData = data[0] as UserSchema;
+  const updatedNewUser = await getUpdatedUserData(newUserData);
+  await updateSupabase(updatedNewUser);
+  res.status(200).json(userSchemaToHacker(updatedNewUser));
+
 });
 
 app.listen(port, () => {
