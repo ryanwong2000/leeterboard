@@ -1,21 +1,10 @@
-interface Submission {
-  lang: string;
-  statusDisplay: string;
-  timestamp: string | Date;
-  title: string;
-  titleSlug: string;
-}
+import type { RecentSubmission as LCQRecentSubmission } from 'leetcode-query';
 
-interface LeetCodeQuerySubmission extends Submission {
-  timestamp: string;
-}
-
-interface RecentSubmission extends Submission {
+interface RecentSubmission extends Omit<LCQRecentSubmission, 'timestamp'> {
   timestamp: Date;
 }
 
 interface UserSchema {
-  id: number;
   username: string;
   submittedToday: boolean;
   streak: number;
@@ -28,8 +17,7 @@ interface UserSchema {
   titleSlug: string;
 }
 
-interface LCUser {
-  id: number;
+interface Hacker {
   username: string;
   submittedToday: boolean;
   streak: number;
@@ -38,13 +26,4 @@ interface LCUser {
   recentSubmission: RecentSubmission;
 }
 
-interface SBUser {
-  id: string;
-  aud: string;
-  role: string;
-  email: string;
-  email_confirmed_at: Date;
-  provider: string;
-}
-
-export type { LeetCodeQuerySubmission, RecentSubmission, LCUser, UserSchema };
+export type { RecentSubmission, UserSchema, Hacker };

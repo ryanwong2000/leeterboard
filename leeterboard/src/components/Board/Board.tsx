@@ -1,10 +1,10 @@
 import React from 'react';
-import { LCUser } from '../../../types/types';
+import { Hacker } from '../../types/types';
 import UserCard from '../UserCard/UserCard';
 import './Board.css';
 
 interface BoardProps {
-  userData: LCUser[];
+  userData: Hacker[];
 }
 
 export const Board = ({ userData }: BoardProps) => {
