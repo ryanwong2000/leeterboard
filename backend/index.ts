@@ -19,26 +19,12 @@ app.use(bodyParser.json());
 
 const lc = new LeetCode();
 
-// const getRecentAcceptedSubmission = async (username: string) => {
-//   try {
-//     const submissions = await lc.recent_submissions(username);
-//     console.log("submissions", submissions);
-//     return submissions.find(
-//       (submission) => submission.statusDisplay === "Accepted"
-//     );
-//   } catch (error) {
-//     console.log("ERROR", error);
-//     return;
-//   }
-// };
-
-const getRecentAcceptedSubmission = async (username: string) => {
+const getProfile = async (username: string) => {
   try {
     const profile = await lc.user(username);
-    const user = profile.matchedUser;
     const submissions = profile.recentSubmissionList;
-    if (user === null || submissions === null) {
-      console.log(`getLeetCodeUser ERROR: user [${username}] not found`);
+    if (profile.matchedUser === null || submissions === null) {
+      console.log(`getProfile ERROR: user [${username}] not found`);
       return;
     }
     // console.log("submissions", submissions);
@@ -47,13 +33,14 @@ const getRecentAcceptedSubmission = async (username: string) => {
     );
     if (recentSubmission === undefined) {
       console.log(
-        `getLeetCodeUser ERROR: no recent submission for ${username}`
+        `getProfile ERROR: no recent submission for ${username}`
       );
       return;
     }
-    return recentSubmission;
+    const user = profile.matchedUser.username;
+    return { username: user, recentSubmission };
   } catch (error) {
-    console.log("getLeetCodeUser ERROR: ", error);
+    console.log("getProfile ERROR: ", error);
     return;
   }
 };
@@ -169,18 +156,14 @@ const updateUserData = (user: UserSchema, lcqRecentSubmission: LCQRecentSubmissi
 };
 
 const getUpdatedUserData = async (user: UserSchema): Promise<UserSchema> => {
-  let lcqRecentSubmission;
-  try {
-    lcqRecentSubmission = await getRecentAcceptedSubmission(user.username);
-  } catch (error) {
-    console.log("getUpdatedUserData ERROR:", error);
-  }
-  if (typeof lcqRecentSubmission === "undefined") {
+  const profile = await getProfile(user.username);
+
+  if (typeof profile?.recentSubmission === "undefined") {
     console.log("getUpdatedUserData ERROR: no recent submission found");
     return user;
   }
 
-  return updateUserData(user, lcqRecentSubmission);
+  return updateUserData(user, profile.recentSubmission);
 };
 
 app.get("/getUpdatedUsers", async (req: Request, res: Response) => {
@@ -192,23 +175,25 @@ app.get("/getUpdatedUsers", async (req: Request, res: Response) => {
   const updatedUserData = await Promise.all(userData.map(getUpdatedUserData));
   const hackers = updatedUserData.map(userSchemaToHacker);
   res.status(200).json(hackers);
-  // updatedUserData.map((user) => updateSupabase(user));
   bulkUpdateSupabase(updatedUserData);
 });
 
 app.post("/createNewUser", async (req: Request, res: Response) => {
-  const username = req.body.username;
+  const profile = await getProfile(req.body.username);
 
-  const recentSubmission = await getRecentAcceptedSubmission(username);
-
-  if (recentSubmission === undefined) {
-    return res.status(404).json(`Leetcode user ${username} not found`);
+  if (profile?.recentSubmission === undefined) {
+    return res.status(404).json(`Leetcode user ${req.body.username} not found`);
   }
 
+  const recentSubmission = profile.recentSubmission;
+  const username = profile.username;
+
+  // INSERT to supabase
   const { data, error } = await supabase
     .from("User Data")
     .insert({ username: username })
     .select();
+
   if (error) {
     console.log("ERROR inserting new user", username, error);
     return res.status(409).json(error);
@@ -216,6 +201,7 @@ app.post("/createNewUser", async (req: Request, res: Response) => {
 
   console.log("/createNewUser [INSERTED]", data);
   const newUserData = data[0] as UserSchema;
+
   const updatedNewUser = updateUserData(newUserData, recentSubmission);
   await updateSupabase(updatedNewUser);
   res.status(200).json(userSchemaToHacker(updatedNewUser));
