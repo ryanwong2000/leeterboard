@@ -28,6 +28,10 @@
   transition: width 0.2s linear;
 }
 
+/* .addUsername .errorMessage {
+  display: none;
+} */
+
 .addUsername button {
   background: transparent;
   border: 0;
@@ -53,11 +57,7 @@
   border-bottom: 1px solid var(--textColor);
 }
 
-/* .addUsername .errorMessage {
-  display: none;
-} */
-
-.addUsername input[type="text"]:focus + .errorMessage {
+.addUsername input[type="text"]:focus > .errorMessage {
   display: inline;
   color: rgb(255, 0, 0);
 }
