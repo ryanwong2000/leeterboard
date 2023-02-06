@@ -40,6 +40,11 @@ function App() {
     console.log("Signed out");
   };
 
+  const sortUsers = (a: Hacker, b: Hacker) => {
+    if (a.streak !== b.streak) return b.streak - a.streak;
+    return a.lastSubmitted > b.lastSubmitted ? -1 : 1;
+  };
+
   const updateAllUsers = async () => {
     console.log("called update all users");
 
@@ -47,12 +52,45 @@ function App() {
     const res = await fetch(url);
 
     const updatedUserData = (await res.json()) as Hacker[];
-    updatedUserData.sort((a, b) => {
-      if (a.streak !== b.streak) return b.streak - a.streak;
-      return a.lastSubmitted > b.lastSubmitted ? -1 : 1;
-    });
+    updatedUserData.sort(sortUsers);
     console.log("updatedUserData: ", updatedUserData);
     setUserData(updatedUserData);
+  };
+
+  const addNewUser = async (username: string): Promise<Number> => {
+    if (username === "") {
+      console.log("addNewUser: no input");
+      return 400;
+    }
+
+    const url = "http://localhost:5000/createNewUser";
+    console.log("Adding", username);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: username })
+    });
+
+    if (res.status === 409) {
+      console.log("[ERROR]409 addNewUser", res);
+      return 409;
+    }
+
+    if (res.status === 404) {
+      console.log("[ERROR]404 addNewUser", res);
+      return 404;
+    }
+
+    if (res.status !== 200) {
+      console.log("[ERROR] addNewUser", res);
+      return res.status;
+    }
+
+    const updatedUser = (await res.json()) as Hacker;
+
+    const updatedUsers = [...userData, updatedUser].sort(sortUsers);
+    setUserData(updatedUsers);
+    return 200;
   };
 
   return (
@@ -67,7 +105,7 @@ function App() {
       <div className="container">
         <div className="boardMenu">
           <h1 className="boardName">Leeterboard</h1>
-          <AddUsername />
+          <AddUsername addNewUser={addNewUser} />
         </div>
         <Board userData={userData} />
       </div>
