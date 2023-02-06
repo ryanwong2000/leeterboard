@@ -57,10 +57,10 @@ function App() {
     setUserData(updatedUserData);
   };
 
-  const addNewUser = async (username: string) => {
+  const addNewUser = async (username: string): Promise<Number> => {
     if (username === "") {
       console.log("addNewUser: no input");
-      return;
+      return 400;
     }
 
     const url = "http://localhost:5000/createNewUser";
@@ -71,15 +71,26 @@ function App() {
       body: JSON.stringify({ username: username })
     });
 
+    if (res.status === 409) {
+      console.log("[ERROR]409 addNewUser", res);
+      return 409;
+    }
+
+    if (res.status === 404) {
+      console.log("[ERROR]404 addNewUser", res);
+      return 404;
+    }
+
     if (res.status !== 200) {
       console.log("[ERROR] addNewUser", res);
-      return;
+      return res.status;
     }
 
     const updatedUser = (await res.json()) as Hacker;
 
     const updatedUsers = [...userData, updatedUser].sort(sortUsers);
     setUserData(updatedUsers);
+    return 200;
   };
 
   return (

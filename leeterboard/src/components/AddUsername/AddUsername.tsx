@@ -1,18 +1,37 @@
 import React, { useState } from "react";
 import "./AddUsername.css";
 
-export const AddUsername = ({ addNewUser }) => {
-  const [username, setUsername] = useState("");
+interface AddUsernameProps {
+  addNewUser: (username: string) => Promise<Number>;
+}
 
-  const handleChange = (e) => {
+export const AddUsername = ({ addNewUser }: AddUsernameProps) => {
+  const [username, setUsername] = useState("");
+  const [errMessage, setErrMessage] = useState("");
+
+  const handleChange = async (e) => {
     e.preventDefault();
-    addNewUser(username);
+    const res = await addNewUser(username);
+    switch (res) {
+      case 200:
+        setErrMessage("");
+        break;
+      case 404:
+        setErrMessage("User does not exist");
+        break;
+      case 409:
+        setErrMessage("User already exists");
+        break;
+      default:
+        setErrMessage("");
+    }
     setUsername("");
   };
 
   return (
     <div className="inputContainer" onSubmit={handleChange}>
       <form className="addUsername">
+        <p className="errorMessage">{errMessage}</p>
         <input
           type="text"
           placeholder="Add User"

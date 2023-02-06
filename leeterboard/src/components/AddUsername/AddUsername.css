@@ -6,11 +6,15 @@
   /* border-bottom: 1px solid var(--textColor); */
   /* border-radius: 1em; */
   display: flex;
+  gap: 1em 1em;
 }
 
 .addUsername {
   height: 1.5em;
   color: var(--textColor);
+  display: flex;
+  gap: 1em;
+  align-items: center;
 }
 
 .addUsername input[type="text"] {
@@ -31,8 +35,8 @@
   outline: 0;
   cursor: pointer;
   color: var(--textColor);
+  padding: 0.5rem;
   width: 2rem;
-  height: 2rem;
   border: 1px solid var(--textColor);
   border-radius: 0.7rem;
 }
@@ -47,4 +51,9 @@
   outline: none;
   width: 140px;
   border-bottom: 1px solid var(--textColor);
+}
+
+.addUsername .errorMessage {
+  display: inline;
+  color: rgb(255, 0, 0);
 }
