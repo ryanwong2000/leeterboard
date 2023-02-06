@@ -53,7 +53,11 @@
   border-bottom: 1px solid var(--textColor);
 }
 
-.addUsername .errorMessage {
+/* .addUsername .errorMessage {
+  display: none;
+} */
+
+.addUsername input[type="text"]:focus + .errorMessage {
   display: inline;
   color: rgb(255, 0, 0);
 }
